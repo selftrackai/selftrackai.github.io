@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login — NEXUS</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    body {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    /* ── Left Side — Visual Panel ── */
+    .auth-visual {
+      position: relative;
+      overflow: hidden;
+      background: var(--bg-deep);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: var(--space-2xl);
+    }
+
+    .auth-visual-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 70% 60% at 30% 30%, rgba(0, 212, 255, 0.1), transparent),
+        radial-gradient(ellipse 50% 60% at 80% 70%, rgba(123, 97, 255, 0.12), transparent),
+        radial-gradient(ellipse 40% 40% at 60% 10%, rgba(0, 229, 160, 0.06), transparent);
+    }
+
+    .auth-visual-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--border-subtle) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px);
+      background-size: 40px 40px;
+      opacity: 0.4;
+    }
+
+    .auth-logo {
+      position: relative;
+      z-index: 1;
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 800;
+      background: var(--grad-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .auth-visual-cards {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+    }
+
+    .auth-preview-card {
+      background: var(--bg-glass);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-lg);
+      padding: var(--space-lg);
+      animation: float 6s ease-in-out infinite;
+    }
+
+    .auth-preview-card:nth-child(2) { animation-delay: -2s; margin-left: 24px; }
+    .auth-preview-card:nth-child(3) { animation-delay: -4s; margin-left: 12px; }
+
+    .auth-preview-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+    }
+
+    .auth-preview-icon {
+      width: 40px; height: 40px;
+      border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.25rem;
+    }
+
+    .auth-quote {
+      position: relative;
+      z-index: 1;
+    }
+
+    .auth-quote blockquote {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 700;
+      line-height: 1.4;
+      color: var(--text-primary);
+      margin-bottom: var(--space-md);
+    }
+
+    .auth-quote cite {
+      font-style: normal;
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+
+    /* ── Right Side — Form ── */
+    .auth-form-side {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-2xl);
+      background: var(--bg-void);
+      position: relative;
+    }
+
+    .auth-form-side::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border-glass), transparent);
+    }
+
+    .auth-form-container {
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .auth-header {
+      margin-bottom: var(--space-2xl);
+    }
+
+    .auth-title {
+      font-family: var(--font-display);
+      font-size: 2.25rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: var(--space-sm);
+    }
+
+    .auth-subtitle {
+      font-size: 1rem;
+      color: var(--text-secondary);
+    }
+
+    .auth-form {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-lg);
+    }
+
+    .auth-divider {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      margin: var(--space-sm) 0;
+    }
+
+    .auth-divider span {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .auth-divider::before,
+    .auth-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border-subtle);
+    }
+
+    .social-auth-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-md);
+      padding: 12px;
+      background: var(--bg-glass);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-md);
+      font-size: 0.9375rem;
+      font-weight: 500;
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: var(--transition-smooth);
+      text-decoration: none;
+    }
+
+    .social-auth-btn:hover {
+      background: var(--bg-glass-mid);
+      border-color: var(--border-accent);
+      color: var(--text-primary);
+      transform: translateY(-2px);
+    }
+
+    .social-auth-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-md);
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1rem;
+      pointer-events: none;
+    }
+
+    .input-field.with-icon { padding-left: 40px; }
+
+    .input-field.with-action { padding-right: 48px; }
+
+    .input-action-btn {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 4px;
+      border-radius: 4px;
+      transition: var(--transition-fast);
+    }
+
+    .input-action-btn:hover { color: var(--text-primary); }
+
+    .form-extras {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .remember-me {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .forgot-link {
+      font-size: 0.875rem;
+      color: var(--accent-primary);
+      transition: var(--transition-fast);
+    }
+
+    .forgot-link:hover { color: var(--text-primary); }
+
+    .auth-footer {
+      text-align: center;
+      margin-top: var(--space-xl);
+      font-size: 0.9375rem;
+      color: var(--text-muted);
+    }
+
+    .auth-footer a {
+      color: var(--accent-primary);
+      font-weight: 600;
+    }
+
+    /* Theme & nav buttons top-right */
+    .auth-top-actions {
+      position: absolute;
+      top: var(--space-lg);
+      right: var(--space-lg);
+      display: flex;
+      gap: var(--space-sm);
+    }
+
+    .error-msg {
+      font-size: 0.8125rem;
+      color: var(--accent-danger);
+      padding: 10px 14px;
+      background: rgba(255, 77, 109, 0.08);
+      border: 1px solid rgba(255, 77, 109, 0.2);
+      border-radius: var(--radius-md);
+      display: none;
+    }
+
+    .error-msg.visible { display: block; }
+
+    .success-msg {
+      font-size: 0.8125rem;
+      color: var(--accent-success);
+      padding: 10px 14px;
+      background: rgba(0, 229, 160, 0.08);
+      border: 1px solid rgba(0, 229, 160, 0.2);
+      border-radius: var(--radius-md);
+      display: none;
+    }
+
+    .success-msg.visible { display: block; }
+
+    /* Password strength indicator */
+    .strength-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+      margin-top: 6px;
+    }
+
+    .strength-segment {
+      height: 3px;
+      border-radius: var(--radius-pill);
+      background: var(--bg-glass-mid);
+      transition: var(--transition-smooth);
+    }
+
+    @media (max-width: 768px) {
+      body { grid-template-columns: 1fr; }
+      .auth-visual { display: none; }
+      .auth-form-side { padding: var(--space-lg); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Left: Visual Panel ── -->
+  <aside class="auth-visual" aria-hidden="true">
+    <div class="auth-visual-bg"></div>
+    <div class="auth-visual-grid"></div>
+
+    <div class="auth-logo">NEXUS</div>
+
+    <div class="auth-visual-cards">
+      <div class="auth-preview-card">
+        <div class="auth-preview-row">
+          <div class="auth-preview-icon" style="background:rgba(0,212,255,0.1)">🔥</div>
+          <div>
+            <div style="font-weight:600;font-size:0.9375rem">14-Day Streak!</div>
+            <div style="font-size:0.8125rem;color:var(--text-muted)">You're on fire. Keep going.</div>
+          </div>
+          <div class="badge badge-primary" style="margin-left:auto">+50 XP</div>
+        </div>
+      </div>
+
+      <div class="auth-preview-card">
+        <div class="auth-preview-row">
+          <div class="auth-preview-icon" style="background:rgba(0,229,160,0.1)">✅</div>
+          <div>
+            <div style="font-weight:600;font-size:0.9375rem">All habits completed</div>
+            <div style="font-size:0.8125rem;color:var(--text-muted)">8/8 habits done today</div>
+          </div>
+        </div>
+        <div class="progress-bar" style="margin-top:var(--space-md)">
+          <div class="progress-bar-fill" style="width:100%;background:linear-gradient(90deg,#00e5a0,#00d4ff)"></div>
+        </div>
+      </div>
+
+      <div class="auth-preview-card">
+        <div class="auth-preview-row">
+          <div class="auth-preview-icon" style="background:rgba(123,97,255,0.1)">⚡</div>
+          <div>
+            <div style="font-weight:600;font-size:0.9375rem">Level 7 reached!</div>
+            <div style="font-size:0.8125rem;color:var(--text-muted)">2,840 XP — Seeker rank</div>
+          </div>
+          <span style="font-size:1.5rem;margin-left:auto">🏆</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="auth-quote">
+      <blockquote>
+        "The secret of discipline is motivation. When a man is sufficiently motivated, discipline will take care of itself."
+      </blockquote>
+      <cite>— NEXUS AI Coach</cite>
+    </div>
+  </aside>
+
+  <!-- ── Right: Form Panel ── -->
+  <main class="auth-form-side">
+    <div class="auth-top-actions">
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
+      <a href="index.html" class="btn btn-ghost btn-sm">← Home</a>
+    </div>
+
+    <div class="auth-form-container animate-fadeInUp">
+      <div class="auth-header">
+        <h1 class="auth-title">Welcome back 👋</h1>
+        <p class="auth-subtitle">Log in to continue your journey.</p>
+      </div>
+
+      <div id="errorMsg" class="error-msg" role="alert"></div>
+
+      <!-- Social Auth -->
+      <div class="social-auth-grid">
+        <button class="social-auth-btn" onclick="handleSocialAuth('Google')">
+          <span>🔵</span> Google
+        </button>
+        <button class="social-auth-btn" onclick="handleSocialAuth('GitHub')">
+          <span>⚫</span> GitHub
+        </button>
+      </div>
+
+      <div class="auth-divider">
+        <span>or continue with email</span>
+      </div>
+
+      <!-- Login Form -->
+      <form class="auth-form" id="loginForm" novalidate>
+        <div class="input-group">
+          <label class="input-label" for="email">Email address</label>
+          <div class="input-wrapper">
+            <span class="input-icon">📧</span>
+            <input
+              type="email"
+              id="email"
+              class="input-field with-icon"
+              placeholder="you@example.com"
+              autocomplete="email"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label class="input-label" for="password">Password</label>
+          <div class="input-wrapper">
+            <span class="input-icon">🔒</span>
+            <input
+              type="password"
+              id="password"
+              class="input-field with-icon with-action"
+              placeholder="Enter your password"
+              autocomplete="current-password"
+              required
+            />
+            <button type="button" class="input-action-btn" id="togglePwd" aria-label="Show password">👁</button>
+          </div>
+        </div>
+
+        <div class="form-extras">
+          <label class="remember-me">
+            <input type="checkbox" class="checkbox-custom" id="remember" />
+            Remember me for 30 days
+          </label>
+          <a href="#" class="forgot-link">Forgot password?</a>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-full" style="justify-content:center;padding:14px" id="loginBtn">
+          <span id="loginBtnText">Sign in to NEXUS</span>
+          <span id="loginSpinner" style="display:none">⟳</span>
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        Don't have an account? <a href="signup.html">Create one free →</a>
+      </div>
+
+      <div style="margin-top:var(--space-xl);padding:var(--space-md);background:var(--bg-glass);border-radius:var(--radius-md);border:1px solid var(--border-subtle)">
+        <div style="font-size:0.75rem;color:var(--text-muted);text-align:center;margin-bottom:var(--space-sm);font-weight:600;letter-spacing:0.05em">DEMO CREDENTIALS</div>
+        <div style="font-size:0.8125rem;color:var(--text-secondary);text-align:center">
+          Email: <code>demo@nexus.ai</code> · Password: <code>demo1234</code>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    // Toggle password visibility
+    document.getElementById('togglePwd').addEventListener('click', function() {
+      const pwd = document.getElementById('password');
+      const isText = pwd.type === 'text';
+      pwd.type = isText ? 'password' : 'text';
+      this.textContent = isText ? '👁' : '🙈';
+    });
+
+    // Form submission
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const errorEl = document.getElementById('errorMsg');
+      const btn = document.getElementById('loginBtn');
+      const btnText = document.getElementById('loginBtnText');
+      const spinner = document.getElementById('loginSpinner');
+
+      // Reset
+      errorEl.classList.remove('visible');
+
+      // Validate
+      if (!email || !password) {
+        errorEl.textContent = 'Please fill in all fields.';
+        errorEl.classList.add('visible');
+        return;
+      }
+
+      if (!email.includes('@')) {
+        errorEl.textContent = 'Please enter a valid email address.';
+        errorEl.classList.add('visible');
+        return;
+      }
+
+      // Loading state
+      btn.disabled = true;
+      btnText.style.display = 'none';
+      spinner.style.display = 'inline';
+      spinner.style.animation = 'spin 1s linear infinite';
+
+      // Simulate API call
+      await new Promise(r => setTimeout(r, 1500));
+
+      // Demo credentials check
+      if (email === 'demo@nexus.ai' && password === 'demo1234') {
+        Toast.show('Welcome back! Redirecting to dashboard...', 'success');
+        setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
+      } else {
+        btn.disabled = false;
+        btnText.style.display = 'inline';
+        spinner.style.display = 'none';
+        errorEl.textContent = 'Invalid email or password. Try demo@nexus.ai / demo1234';
+        errorEl.classList.add('visible');
+      }
+    });
+
+    function handleSocialAuth(provider) {
+      Toast.show(`Connecting with ${provider}...`, 'info');
+      setTimeout(() => { window.location.href = 'onboarding.html'; }, 1500);
+    }
+  </script>
+</body>
+</html>

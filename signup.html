@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign Up — NEXUS</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-xl);
+      background: var(--bg-void);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .signup-bg {
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 70% 50% at 20% 20%, rgba(0,212,255,0.07), transparent),
+        radial-gradient(ellipse 60% 50% at 80% 80%, rgba(123,97,255,0.08), transparent);
+      pointer-events: none;
+    }
+
+    .signup-grid-bg {
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--border-subtle) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px);
+      background-size: 48px 48px;
+      opacity: 0.35;
+      pointer-events: none;
+    }
+
+    /* ── Card ── */
+    .signup-card {
+      width: 100%;
+      max-width: 520px;
+      background: var(--bg-glass);
+      backdrop-filter: blur(40px);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-xl);
+      padding: var(--space-2xl);
+      position: relative;
+      z-index: 1;
+      animation: scale-in 0.4s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    /* ── Steps indicator ── */
+    .steps-bar {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-bottom: var(--space-2xl);
+    }
+
+    .step-dot {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      border: 2px solid var(--border-glass);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      font-family: var(--font-display);
+      color: var(--text-muted);
+      background: var(--bg-void);
+      transition: var(--transition-smooth);
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .step-dot.active {
+      border-color: var(--accent-primary);
+      color: var(--accent-primary);
+      background: rgba(0,212,255,0.08);
+      box-shadow: 0 0 16px rgba(0,212,255,0.25);
+    }
+
+    .step-dot.done {
+      border-color: var(--accent-success);
+      background: var(--accent-success);
+      color: #000;
+    }
+
+    .step-line {
+      flex: 1;
+      height: 2px;
+      background: var(--border-subtle);
+      transition: var(--transition-smooth);
+    }
+
+    .step-line.done { background: var(--accent-success); }
+
+    /* ── Step panels ── */
+    .step-panel { display: none; }
+    .step-panel.active {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-lg);
+      animation: fadeInUp 0.4s ease;
+    }
+
+    .step-title {
+      font-family: var(--font-display);
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 4px;
+    }
+
+    .step-subtitle { font-size: 0.9375rem; color: var(--text-secondary); }
+
+    /* ── User type grid ── */
+    .user-type-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-sm);
+    }
+
+    .user-type-option {
+      padding: var(--space-md);
+      border-radius: var(--radius-lg);
+      background: var(--bg-glass);
+      border: 2px solid var(--border-subtle);
+      cursor: pointer;
+      transition: var(--transition-smooth);
+      text-align: center;
+    }
+
+    .user-type-option:hover {
+      border-color: var(--border-glass);
+      background: var(--bg-glass-mid);
+    }
+
+    .user-type-option.selected {
+      border-color: var(--accent-primary);
+      background: rgba(0,212,255,0.06);
+    }
+
+    .user-type-option .emoji { font-size: 1.75rem; display: block; margin-bottom: 6px; }
+    .user-type-option .label { font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); }
+
+    /* ── Nav buttons ── */
+    .step-nav {
+      display: flex;
+      gap: var(--space-md);
+      margin-top: var(--space-sm);
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-xl);
+    }
+
+    .error-msg {
+      font-size: 0.8125rem;
+      color: var(--accent-danger);
+      padding: 10px 14px;
+      background: rgba(255,77,109,0.08);
+      border: 1px solid rgba(255,77,109,0.2);
+      border-radius: var(--radius-md);
+      display: none;
+    }
+    .error-msg.visible { display: block; }
+
+    /* Password strength */
+    .strength-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+      margin-top: 6px;
+    }
+
+    .strength-seg {
+      height: 3px;
+      border-radius: var(--radius-pill);
+      background: var(--bg-glass-mid);
+      transition: background 0.3s ease;
+    }
+
+    .strength-label {
+      font-size: 0.75rem;
+      margin-top: 4px;
+      color: var(--text-muted);
+    }
+
+    .input-wrapper { position: relative; }
+    .input-icon {
+      position: absolute;
+      left: 14px; top: 50%;
+      transform: translateY(-50%);
+      font-size: 1rem;
+      pointer-events: none;
+    }
+    .input-field.with-icon { padding-left: 40px; }
+    .input-field.with-action { padding-right: 48px; }
+    .input-action-btn {
+      position: absolute;
+      right: 12px; top: 50%;
+      transform: translateY(-50%);
+      background: none; border: none;
+      color: var(--text-muted);
+      cursor: pointer; font-size: 1rem;
+      border-radius: 4px;
+      transition: var(--transition-fast);
+    }
+    .input-action-btn:hover { color: var(--text-primary); }
+
+    .terms-row {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-sm);
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    .social-auth-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-md);
+    }
+
+    .social-auth-btn {
+      display: flex; align-items: center; justify-content: center;
+      gap: var(--space-sm);
+      padding: 12px;
+      background: var(--bg-glass);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-md);
+      font-size: 0.9375rem; font-weight: 500;
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: var(--transition-smooth);
+    }
+
+    .social-auth-btn:hover {
+      background: var(--bg-glass-mid);
+      border-color: var(--border-accent);
+      transform: translateY(-2px);
+    }
+
+    .auth-divider {
+      display: flex; align-items: center; gap: var(--space-md);
+    }
+    .auth-divider span { font-size: 0.8125rem; color: var(--text-muted); white-space: nowrap; }
+    .auth-divider::before, .auth-divider::after {
+      content: ''; flex: 1; height: 1px; background: var(--border-subtle);
+    }
+
+    .auth-footer {
+      text-align: center;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-top: var(--space-md);
+    }
+    .auth-footer a { color: var(--accent-primary); font-weight: 600; }
+
+    @keyframes scale-in {
+      from { opacity: 0; transform: scale(0.95) translateY(10px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="signup-bg"></div>
+  <div class="signup-grid-bg"></div>
+
+  <!-- Top-right actions -->
+  <div style="position:fixed;top:var(--space-lg);right:var(--space-lg);display:flex;gap:var(--space-sm);z-index:10">
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
+    <a href="index.html" class="btn btn-ghost btn-sm">← Home</a>
+  </div>
+
+  <div class="signup-card">
+    <!-- Logo -->
+    <div class="top-bar">
+      <span style="font-family:var(--font-display);font-size:1.25rem;font-weight:800;background:var(--grad-primary);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">NEXUS</span>
+      <span style="font-size:0.8125rem;color:var(--text-muted)" id="stepCounter">Step 1 of 3</span>
+    </div>
+
+    <!-- Steps bar -->
+    <div class="steps-bar" id="stepsBar">
+      <div class="step-dot active" id="dot1">1</div>
+      <div class="step-line" id="line1"></div>
+      <div class="step-dot" id="dot2">2</div>
+      <div class="step-line" id="line2"></div>
+      <div class="step-dot" id="dot3">3</div>
+    </div>
+
+    <div id="errorMsg" class="error-msg" role="alert"></div>
+
+    <!-- ── Step 1: Account ── -->
+    <div class="step-panel active" id="step1">
+      <div>
+        <div class="step-title">Create account ✨</div>
+        <div class="step-subtitle">Join 2.4M people leveling up their lives.</div>
+      </div>
+
+      <div class="social-auth-grid">
+        <button class="social-auth-btn" onclick="socialSignup('Google')">🔵 Google</button>
+        <button class="social-auth-btn" onclick="socialSignup('GitHub')">⚫ GitHub</button>
+      </div>
+
+      <div class="auth-divider"><span>or with email</span></div>
+
+      <div class="input-group">
+        <label class="input-label" for="fullName">Full name</label>
+        <div class="input-wrapper">
+          <span class="input-icon">👤</span>
+          <input type="text" id="fullName" class="input-field with-icon" placeholder="Arjun Kumar" autocomplete="name" />
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label class="input-label" for="email">Email address</label>
+        <div class="input-wrapper">
+          <span class="input-icon">📧</span>
+          <input type="email" id="email" class="input-field with-icon" placeholder="you@example.com" autocomplete="email" />
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label class="input-label" for="password">Password</label>
+        <div class="input-wrapper">
+          <span class="input-icon">🔒</span>
+          <input type="password" id="password" class="input-field with-icon with-action" placeholder="Create a strong password" autocomplete="new-password" id="password" oninput="checkStrength(this.value)" />
+          <button type="button" class="input-action-btn" id="togglePwd" aria-label="Toggle password">👁</button>
+        </div>
+        <div class="strength-row" id="strengthBar">
+          <div class="strength-seg" id="s1"></div>
+          <div class="strength-seg" id="s2"></div>
+          <div class="strength-seg" id="s3"></div>
+          <div class="strength-seg" id="s4"></div>
+        </div>
+        <div class="strength-label" id="strengthLabel">Enter a password</div>
+      </div>
+
+      <div class="terms-row">
+        <input type="checkbox" class="checkbox-custom" id="terms" />
+        <label for="terms">I agree to the <a href="#" style="color:var(--accent-primary)">Terms of Service</a> and <a href="#" style="color:var(--accent-primary)">Privacy Policy</a></label>
+      </div>
+
+      <div class="step-nav">
+        <button class="btn btn-primary w-full" style="justify-content:center;padding:14px" onclick="goStep(2)">
+          Continue →
+        </button>
+      </div>
+
+      <div class="auth-footer">Already have an account? <a href="login.html">Log in</a></div>
+    </div>
+
+    <!-- ── Step 2: Who are you? ── -->
+    <div class="step-panel" id="step2">
+      <div>
+        <div class="step-title">Who are you? 🎯</div>
+        <div class="step-subtitle">We'll personalise your dashboard and AI coach.</div>
+      </div>
+
+      <div class="user-type-grid">
+        <div class="user-type-option" onclick="selectType(this,'jee')">
+          <span class="emoji">📚</span><div class="label">JEE Aspirant</div>
+        </div>
+        <div class="user-type-option" onclick="selectType(this,'neet')">
+          <span class="emoji">🩺</span><div class="label">NEET Aspirant</div>
+        </div>
+        <div class="user-type-option" onclick="selectType(this,'upsc')">
+          <span class="emoji">📜</span><div class="label">UPSC Aspirant</div>
+        </div>
+        <div class="user-type-option" onclick="selectType(this,'college')">
+          <span class="emoji">🎓</span><div class="label">College Student</div>
+        </div>
+        <div class="user-type-option" onclick="selectType(this,'professional')">
+          <span class="emoji">💼</span><div class="label">Professional</div>
+        </div>
+        <div class="user-type-option" onclick="selectType(this,'entrepreneur')">
+          <span class="emoji">🚀</span><div class="label">Entrepreneur</div>
+        </div>
+        <div class="user-type-option" onclick="selectType(this,'fitness')">
+          <span class="emoji">🏋️</span><div class="label">Fitness Focused</div>
+        </div>
+        <div class="user-type-option" onclick="selectType(this,'creator')">
+          <span class="emoji">🎥</span><div class="label">Content Creator</div>
+        </div>
+      </div>
+
+      <div class="step-nav">
+        <button class="btn btn-ghost" style="flex:1;justify-content:center" onclick="goStep(1)">← Back</button>
+        <button class="btn btn-primary" style="flex:2;justify-content:center" onclick="goStep(3)">Continue →</button>
+      </div>
+    </div>
+
+    <!-- ── Step 3: Goals ── -->
+    <div class="step-panel" id="step3">
+      <div>
+        <div class="step-title">Your main goal 🏆</div>
+        <div class="step-subtitle">What matters most to you right now?</div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:var(--space-sm)" id="goalOptions">
+        <div class="user-type-option" style="text-align:left;display:flex;align-items:center;gap:var(--space-md)" onclick="selectGoal(this,'discipline')">
+          <span style="font-size:1.5rem">⚡</span>
+          <div>
+            <div class="label">Build iron discipline</div>
+            <div style="font-size:0.75rem;color:var(--text-muted)">Consistent habits, no excuses</div>
+          </div>
+        </div>
+        <div class="user-type-option" style="text-align:left;display:flex;align-items:center;gap:var(--space-md)" onclick="selectGoal(this,'exam')">
+          <span style="font-size:1.5rem">📊</span>
+          <div>
+            <div class="label">Crack a competitive exam</div>
+            <div style="font-size:0.75rem;color:var(--text-muted)">JEE, NEET, UPSC, CAT, GRE…</div>
+          </div>
+        </div>
+        <div class="user-type-option" style="text-align:left;display:flex;align-items:center;gap:var(--space-md)" onclick="selectGoal(this,'career')">
+          <span style="font-size:1.5rem">📈</span>
+          <div>
+            <div class="label">Accelerate my career</div>
+            <div style="font-size:0.75rem;color:var(--text-muted)">Skills, promotions, side projects</div>
+          </div>
+        </div>
+        <div class="user-type-option" style="text-align:left;display:flex;align-items:center;gap:var(--space-md)" onclick="selectGoal(this,'health')">
+          <span style="font-size:1.5rem">💪</span>
+          <div>
+            <div class="label">Level up health & fitness</div>
+            <div style="font-size:0.75rem;color:var(--text-muted)">Body, mind, energy</div>
+          </div>
+        </div>
+        <div class="user-type-option" style="text-align:left;display:flex;align-items:center;gap:var(--space-md)" onclick="selectGoal(this,'mental')">
+          <span style="font-size:1.5rem">🧘</span>
+          <div>
+            <div class="label">Mental clarity & peace</div>
+            <div style="font-size:0.75rem;color:var(--text-muted)">Mindfulness, journaling, balance</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step-nav">
+        <button class="btn btn-ghost" style="flex:1;justify-content:center" onclick="goStep(2)">← Back</button>
+        <button class="btn btn-primary" style="flex:2;justify-content:center" id="finishBtn" onclick="finish()">
+          Launch NEXUS 🚀
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    let selectedType = null;
+    let selectedGoal = null;
+    const TOTAL_STEPS = 3;
+
+    function goStep(n) {
+      // Validate step 1
+      if (n === 2) {
+        const name = document.getElementById('fullName').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const pwd = document.getElementById('password').value;
+        const terms = document.getElementById('terms').checked;
+        const err = document.getElementById('errorMsg');
+
+        if (!name || !email || !pwd) {
+          err.textContent = 'Please fill in all fields.';
+          err.classList.add('visible');
+          return;
+        }
+        if (!email.includes('@')) {
+          err.textContent = 'Please enter a valid email.';
+          err.classList.add('visible');
+          return;
+        }
+        if (pwd.length < 8) {
+          err.textContent = 'Password must be at least 8 characters.';
+          err.classList.add('visible');
+          return;
+        }
+        if (!terms) {
+          err.textContent = 'Please accept the Terms of Service.';
+          err.classList.add('visible');
+          return;
+        }
+        err.classList.remove('visible');
+      }
+
+      // Validate step 2
+      if (n === 3 && !selectedType) {
+        const err = document.getElementById('errorMsg');
+        err.textContent = 'Please select who you are.';
+        err.classList.add('visible');
+        return;
+      }
+      document.getElementById('errorMsg').classList.remove('visible');
+
+      // Hide all panels
+      document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+      document.getElementById(`step${n}`).classList.add('active');
+
+      // Update dots
+      for (let i = 1; i <= TOTAL_STEPS; i++) {
+        const dot = document.getElementById(`dot${i}`);
+        dot.classList.remove('active', 'done');
+        if (i < n)  dot.classList.add('done'), dot.textContent = '✓';
+        if (i === n) dot.classList.add('active'), dot.textContent = i;
+        if (i > n)  dot.textContent = i;
+      }
+
+      // Update lines
+      for (let i = 1; i < TOTAL_STEPS; i++) {
+        const line = document.getElementById(`line${i}`);
+        line.classList.toggle('done', i < n);
+      }
+
+      document.getElementById('stepCounter').textContent = `Step ${n} of ${TOTAL_STEPS}`;
+    }
+
+    function selectType(el, type) {
+      document.querySelectorAll('#step2 .user-type-option').forEach(o => o.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedType = type;
+      Store.set('userType', type);
+    }
+
+    function selectGoal(el, goal) {
+      document.querySelectorAll('#step3 .user-type-option').forEach(o => o.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedGoal = goal;
+    }
+
+    async function finish() {
+      if (!selectedGoal) {
+        const err = document.getElementById('errorMsg');
+        err.textContent = 'Please select your main goal.';
+        err.classList.add('visible');
+        return;
+      }
+
+      const btn = document.getElementById('finishBtn');
+      btn.disabled = true;
+      btn.textContent = 'Creating your universe... ✨';
+
+      Store.set('userGoal', selectedGoal);
+      Store.set('userName', document.getElementById('fullName').value.trim());
+
+      await new Promise(r => setTimeout(r, 2000));
+      Toast.show('Account created! Personalising your experience...', 'success');
+      setTimeout(() => { window.location.href = 'onboarding.html'; }, 1200);
+    }
+
+    function socialSignup(provider) {
+      Toast.show(`Connecting with ${provider}...`, 'info');
+      setTimeout(() => { window.location.href = 'onboarding.html'; }, 1400);
+    }
+
+    // Password toggle
+    document.getElementById('togglePwd').addEventListener('click', function() {
+      const pwd = document.getElementById('password');
+      const isText = pwd.type === 'text';
+      pwd.type = isText ? 'password' : 'text';
+      this.textContent = isText ? '👁' : '🙈';
+    });
+
+    // Password strength
+    function checkStrength(val) {
+      const segs = ['s1','s2','s3','s4'];
+      const label = document.getElementById('strengthLabel');
+      let score = 0;
+
+      if (val.length >= 8) score++;
+      if (/[A-Z]/.test(val)) score++;
+      if (/[0-9]/.test(val)) score++;
+      if (/[^A-Za-z0-9]/.test(val)) score++;
+
+      const colors = ['#ff4d6d','#ffd93d','#00d4ff','#00e5a0'];
+      const labels = ['Weak','Fair','Good','Strong'];
+
+      segs.forEach((id, i) => {
+        document.getElementById(id).style.background =
+          i < score ? colors[score - 1] : 'var(--bg-glass-mid)';
+      });
+
+      label.textContent = val.length === 0 ? 'Enter a password' : labels[score - 1] || 'Weak';
+      label.style.color = val.length === 0 ? 'var(--text-muted)' : colors[score - 1];
+    }
+  </script>
+</body>
+</html>

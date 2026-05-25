@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Onboarding — NEXUS</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    body {
+      min-height: 100vh;
+      background: var(--bg-void);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-xl) var(--space-lg);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .ob-bg {
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 10% 20%, rgba(0,212,255,0.06), transparent),
+        radial-gradient(ellipse 50% 60% at 90% 70%, rgba(123,97,255,0.07), transparent);
+      pointer-events: none;
+    }
+
+    /* ── Progress Bar (top) ── */
+    .ob-progress-track {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--border-subtle);
+      z-index: 100;
+    }
+
+    .ob-progress-fill {
+      height: 100%;
+      background: var(--grad-primary);
+      border-radius: 0 var(--radius-pill) var(--radius-pill) 0;
+      transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    /* ── Top bar ── */
+    .ob-topbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      padding: 16px var(--space-xl);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 99;
+    }
+
+    .ob-logo {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 800;
+      background: var(--grad-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .ob-step-label {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    /* ── Question Card ── */
+    .ob-card {
+      width: 100%;
+      max-width: 600px;
+      margin-top: 60px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .ob-question-wrap {
+      display: none;
+      flex-direction: column;
+      gap: var(--space-xl);
+      animation: fadeInUp 0.45s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    .ob-question-wrap.active { display: flex; }
+
+    .ob-q-number {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--accent-primary);
+      letter-spacing: 0.1em;
+    }
+
+    .ob-q-title {
+      font-family: var(--font-display);
+      font-size: clamp(1.5rem, 4vw, 2rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.25;
+    }
+
+    .ob-q-subtitle {
+      font-size: 0.9375rem;
+      color: var(--text-secondary);
+      margin-top: -8px;
+    }
+
+    /* ── Option Cards ── */
+    .ob-options {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+    }
+
+    .ob-option {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      padding: var(--space-md) var(--space-lg);
+      background: var(--bg-glass);
+      border: 2px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      cursor: pointer;
+      transition: var(--transition-smooth);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .ob-option::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, rgba(0,212,255,0.04), transparent);
+      opacity: 0;
+      transition: var(--transition-fast);
+    }
+
+    .ob-option:hover {
+      border-color: var(--border-glass);
+      background: var(--bg-glass-mid);
+      transform: translateX(4px);
+    }
+
+    .ob-option:hover::before { opacity: 1; }
+
+    .ob-option.selected {
+      border-color: var(--accent-primary);
+      background: rgba(0,212,255,0.06);
+    }
+
+    .ob-option.selected::before { opacity: 1; }
+
+    .ob-opt-icon {
+      width: 40px; height: 40px;
+      border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.25rem;
+      background: var(--bg-glass-mid);
+      flex-shrink: 0;
+      transition: var(--transition-fast);
+    }
+
+    .ob-option.selected .ob-opt-icon {
+      background: rgba(0,212,255,0.12);
+    }
+
+    .ob-opt-text { flex: 1; }
+    .ob-opt-label { font-size: 0.9375rem; font-weight: 600; color: var(--text-primary); }
+    .ob-opt-desc  { font-size: 0.8125rem; color: var(--text-muted); margin-top: 2px; }
+
+    .ob-opt-check {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      border: 2px solid var(--border-glass);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem;
+      transition: var(--transition-fast);
+      flex-shrink: 0;
+    }
+
+    .ob-option.selected .ob-opt-check {
+      background: var(--accent-primary);
+      border-color: var(--accent-primary);
+      color: #000;
+    }
+
+    /* ── Grid options (2-col) ── */
+    .ob-options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-sm);
+    }
+
+    .ob-option-grid {
+      padding: var(--space-lg);
+      background: var(--bg-glass);
+      border: 2px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      cursor: pointer;
+      transition: var(--transition-smooth);
+      text-align: center;
+    }
+
+    .ob-option-grid:hover {
+      border-color: var(--border-glass);
+      background: var(--bg-glass-mid);
+      transform: translateY(-2px);
+    }
+
+    .ob-option-grid.selected {
+      border-color: var(--accent-primary);
+      background: rgba(0,212,255,0.06);
+    }
+
+    .ob-option-grid .big-emoji { font-size: 2rem; display: block; margin-bottom: 8px; }
+    .ob-option-grid .grid-label { font-size: 0.875rem; font-weight: 600; }
+
+    /* ── Slider question ── */
+    .ob-slider-wrap {
+      padding: var(--space-xl);
+      background: var(--bg-glass);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-lg);
+    }
+
+    .ob-slider-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: var(--space-sm);
+    }
+
+    .ob-slider-value {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 800;
+      text-align: center;
+      background: var(--grad-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: var(--space-md);
+    }
+
+    /* ── Time picker ── */
+    .ob-time-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-sm);
+    }
+
+    /* ── Nav ── */
+    .ob-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-md);
+    }
+
+    .ob-skip {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      background: none; border: none;
+      transition: var(--transition-fast);
+    }
+
+    .ob-skip:hover { color: var(--text-secondary); }
+
+    /* ── Final screen ── */
+    .ob-final {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: var(--space-xl);
+      animation: fadeInUp 0.6s ease;
+    }
+
+    .ob-final.active { display: flex; }
+
+    .ob-final-icon {
+      width: 100px; height: 100px;
+      border-radius: 50%;
+      background: var(--grad-primary);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 3rem;
+      box-shadow: 0 0 60px rgba(0,212,255,0.3);
+      animation: glow-pulse 2s ease-in-out infinite;
+    }
+
+    .ob-profile-summary {
+      width: 100%;
+      background: var(--bg-glass);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-xl);
+      padding: var(--space-xl);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-md);
+      text-align: left;
+    }
+
+    .ob-summary-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .ob-summary-key {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .ob-summary-val {
+      font-size: 0.9375rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    @media (max-width: 600px) {
+      .ob-options-grid { grid-template-columns: 1fr; }
+      .ob-time-grid { grid-template-columns: repeat(2, 1fr); }
+      .ob-profile-summary { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="ob-bg"></div>
+
+  <!-- Top progress bar -->
+  <div class="ob-progress-track">
+    <div class="ob-progress-fill" id="progressFill" style="width:0%"></div>
+  </div>
+
+  <!-- Top bar -->
+  <div class="ob-topbar">
+    <span class="ob-logo">NEXUS</span>
+    <span class="ob-step-label" id="stepLabel">01 / 07</span>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
+  </div>
+
+  <!-- ── Question Panels ── -->
+  <div class="ob-card">
+
+    <!-- Q1: Wake-up time -->
+    <div class="ob-question-wrap active" id="q1">
+      <div>
+        <div class="ob-q-number">QUESTION 01 — LIFESTYLE</div>
+        <div class="ob-q-title">When do you usually wake up? ☀️</div>
+        <div class="ob-q-subtitle">Your AI schedule will be built around your natural rhythm.</div>
+      </div>
+      <div class="ob-options-grid ob-time-grid" id="wakeOptions">
+        <div class="ob-option-grid" onclick="selectGrid(this,'wake','4-5am')">
+          <span class="big-emoji">🌑</span><div class="grid-label">4 – 5 AM</div>
+        </div>
+        <div class="ob-option-grid" onclick="selectGrid(this,'wake','5-6am')">
+          <span class="big-emoji">🌒</span><div class="grid-label">5 – 6 AM</div>
+        </div>
+        <div class="ob-option-grid" onclick="selectGrid(this,'wake','6-7am')">
+          <span class="big-emoji">🌅</span><div class="grid-label">6 – 7 AM</div>
+        </div>
+        <div class="ob-option-grid" onclick="selectGrid(this,'wake','7-8am')">
+          <span class="big-emoji">☀️</span><div class="grid-label">7 – 8 AM</div>
+        </div>
+        <div class="ob-option-grid" onclick="selectGrid(this,'wake','8-9am')">
+          <span class="big-emoji">🌤</span><div class="grid-label">8 – 9 AM</div>
+        </div>
+        <div class="ob-option-grid" onclick="selectGrid(this,'wake','9+')">
+          <span class="big-emoji">🦉</span><div class="grid-label">9 AM+</div>
+        </div>
+      </div>
+      <div class="ob-nav">
+        <button class="ob-skip" onclick="nextQ(2)">Skip</button>
+        <button class="btn btn-primary" onclick="nextQ(2)">Next →</button>
+      </div>
+    </div>
+
+    <!-- Q2: Discipline level -->
+    <div class="ob-question-wrap" id="q2">
+      <div>
+        <div class="ob-q-number">QUESTION 02 — SELF-AWARENESS</div>
+        <div class="ob-q-title">How disciplined are you currently? 💪</div>
+        <div class="ob-q-subtitle">Be honest — NEXUS adapts to where you are, not where you wish you were.</div>
+      </div>
+      <div class="ob-options" id="discOptions">
+        <div class="ob-option" onclick="selectOpt(this,'discipline','chaos')">
+          <div class="ob-opt-icon">🌀</div>
+          <div class="ob-opt-text">
+            <div class="ob-opt-label">Total chaos</div>
+            <div class="ob-opt-desc">Procrastination is my superpower, honestly</div>
+          </div>
+          <div class="ob-opt-check"></div>
+        </div>
+        <div class="ob-option" onclick="selectOpt(this,'discipline','struggling')">
+          <div class="ob-opt-icon">😤</div>
+          <div class="ob-opt-text">
+            <div class="ob-opt-label">Struggling but trying</div>
+            <div class="ob-opt-desc">I start well but fall off after a few days</div>
+          </div>
+          <div class="ob-opt-check"></div>
+        </div>
+        <div class="ob-option" onclick="selectOpt(this,'discipline','moderate')">
+          <div class="ob-opt-icon">⚖️</div>
+          <div class="ob-opt-text">
+            <div class="ob-opt-label">Moderately consistent</div>
+            <div class="ob-opt-desc">Good weeks and bad weeks — I need stability</div>
+          </div>
+          <div class="ob-opt-check"></div>
+        </div>
+        <div class="ob-option" onclick="selectOpt(this,'discipline','strong')">
+          <div class="ob-opt-icon">🔥</div>
+          <div class="ob-opt-text">
+            <div class="ob-opt-label">Pretty strong</div>
+            <div class="ob-opt-desc">I just need better systems and tracking</div>
+          </div>
+          <div class="ob-opt-check"></div>
+        </div>
+        <div class="ob-option" onclick="selectOpt(this,'discipline','elite')">
+          <div class="ob-opt-icon">⚡</div>
+          <div class="ob-opt-text">
+            <div class="ob-opt-label">Elite level</div>
+            <div class="ob-opt-desc">I want to optimise what's already working</div>
+          </div>
+          <div class="ob-opt-check"></div>
+        </div>
+      </div>
+      <div class="ob-nav">
+        <button class="ob-skip" onclick="nextQ(1)">← Back</button>
+        <button class="btn btn-primary" onclick="nextQ(3)">Next →</button>
+      </div>
+    </div>
+
+    <!-- Q3: Attention span -->
+    <div class="ob-question-wrap" id="q3">
+      <div>
+        <div class="ob-q-number">QUESTION 03 — FOCUS</div>
+        <div class="ob-q-title">How long can you focus without getting distracted? 🧠</div>
+        <div class="ob-q-subtitle">This determines your Pomodoro settings and deep work blocks.</div>
+      </div>
+      <div class="ob-slider-wrap">
+        <div class="ob-slider-value" id="focusVal">25 minutes</div>
+        <input type="range" min="5" max="90" value="25" step="5"
+          oninput="document.getElementById('focusVal').textContent = this.value + ' minutes'; answers.focusSpan = this.value" />
+        <div class="ob-slider-labels">
+          <span>5 min 😵</span>
+          <span>45 min 💪</span>
+          <span>90 min 🧠</span>
+        </div>
+      </div>
+      <div class="ob-nav">
+        <button class="ob-skip" onclick="nextQ(2)">← Back</button>
+        <button class="btn btn-primary" onclick="nextQ(4)">Next →</button>
+      </div>
+    </div>
+
+    <!-- Q4: Motivation type -->
+    <div class="ob-question-wrap" id="q4">
+      <div>
+        <div class="ob-q-number">QUESTION 04 — PSYCHOLOGY</div>
+        <div class="ob-q-title">What gets you moving? 🎯</div>
+        <div class="ob-q-subtitle">Your AI coach will match your motivational language.</div>
+      </div>
+      <div class="ob-options" id="motivOptions">
+        <div class="ob-option" onclick="selectOpt(this,'motivation','fear')">
+          <div class="ob-opt-icon">😰</div>
+          <div class="ob-opt-text">
+            <div class="ob-opt-label">Fear of failure / falling behind</div>
+            <div class="ob-opt-desc">I perform best under pressure</div>
+          </div>
+          <div class="ob-opt-check"></div>
+        </div>
+        <div class="ob-option" onclick="selectOpt(this,'motivation','vision')">
+          <div class="ob-opt-icon">🌟</div>
+          <div class="ob-opt-text">
+            <div class="ob-opt-label">A clear, exciting vision</div>
+            <div class="ob-opt-desc">I thrive when I can see where I'm going</div>
+          </div>
+          <div class="ob-opt-check"></div>
+        </div>
+        <div class="ob-option" onclick="selectOpt(this,'motivation','competition')">
+          <div class="ob-opt-icon">🏆</div>
+          <div class="ob-opt-text">
+            <div class="ob-opt-label">Competition & rankings</div>
+            <div class="ob-opt-desc">Being #1 drives me</div>
+          </div>
+          <div class="ob-opt-check"></div>
+        </div>
+        <div class="ob-option" onclick="selectOpt(this,'motivation','progress')">
+          <div class="ob-opt-icon">📈</div>
+          <div class="ob-opt-text">
+            <div class="ob-opt-label">Visible progress & streaks</div>
+            <div class="ob-opt-desc">Consistency graphs and XP bars excite me</div>
+          </div>
+          <div class="ob-opt-check"></div>
+        </div>
+        <div class="ob-option" onclick="selectOpt(this,'motivation','purpose')">
+          <div class="ob-opt-icon">💡</div>
+          <div class="ob-opt-text">
+            <div class="ob-opt-label">Deeper purpose & meaning</div>
+            <div class="ob-opt-desc">I need to feel connected to my "why"</div>
+          </div>
+          <div class="ob-opt-check"></div>
+        </div>
+      </div>
+      <div class="ob-nav">
+        <button class="ob-skip" onclick="nextQ(3)">← Back</button>
+        <button class="btn btn-primary" onclick="nextQ(5)">Next →</button>
+      </div>
+    </div>
+
+    <!-- Q5: Biggest weakness -->
+    <div class="ob-question-wrap" id="q5">
+      <div>
+        <div class="ob-q-number">QUESTION 05 — CHALLENGES</div>
+        <div class="ob-q-title">What's your biggest enemy? 👾</div>
+        <div class="ob-q-subtitle">NEXUS will build specific countermeasures for this.</div>
+      </div>
+      <div class="ob-options-grid" id="weakOptions">
+        <div class="ob-option-grid" onclick="selectGrid(this,'weakness','phone')">
+          <span class="big-emoji">📱</span><div class="grid-label">Phone addiction</div>
+        </div>
+        <div class="ob-option-grid" onclick="selectGrid(this,'weakness','procrastination')">
+          <span class="big-emoji">😴</span><div class="grid-label">Procrastination</div>
+        </div>
+        <div class="ob-option-grid" onclick="selectGrid(this,'weakness','sleep')">
+          <span class="big-emoji">🛌</span><div class="grid-label">Irregular sleep</div>
+        </div>
+        <div class="ob-option-grid" onclick="selectGrid(this,'weakness','burnout')">
+          <span class="big-emoji">🔥</span><div class="grid-label">Burnout cycles</div>
+        </div>
+        <div class="ob-option-grid" onclick="selectGrid(this,'weakness','distraction')">
+          <span class="big-emoji">🌀</span><div class="grid-label">Distractions</div>
+        </div>
+        <div class="ob-option-grid" onclick="selectGrid(this,'weakness','motivation')">
+          <span class="big-emoji">📉</span><div class="grid-label">Motivation crashes</div>
+        </div>
+      </div>
+      <div class="ob-nav">
+        <button class="ob-skip" onclick="nextQ(4)">← Back</button>
+        <button class="btn btn-primary" onclick="nextQ(6)">Next →</button>
+      </div>
+    </div>
+
+    <!-- Q6: Sleep hours -->
+    <div class="ob-question-wrap" id="q6">
+      <div>
+        <div class="ob-q-number">QUESTION 06 — HEALTH</div>
+        <div class="ob-q-title">How many hours do you sleep? 😴</div>
+        <div class="ob-q-subtitle">Sleep is the biggest performance variable. NEXUS tracks it all.</div>
+      </div>
+      <div class="ob-slider-wrap">
+        <div class="ob-slider-value" id="sleepVal">7 hours</div>
+        <input type="range" min="4" max="10" value="7" step="0.5"
+          oninput="document.getElementById('sleepVal').textContent = this.value + ' hours'; answers.sleepHours = this.value" />
+        <div class="ob-slider-labels">
+          <span>4h 😵</span>
+          <span>7h 🌟</span>
+          <span>10h 😴</span>
+        </div>
+      </div>
+      <div class="ob-nav">
+        <button class="ob-skip" onclick="nextQ(5)">← Back</button>
+        <button class="btn btn-primary" onclick="nextQ(7)">Next →</button>
+      </div>
+    </div>
+
+    <!-- Q7: Daily study/work hours -->
+    <div class="ob-question-wrap" id="q7">
+      <div>
+        <div class="ob-q-number">QUESTION 07 — CAPACITY</div>
+        <div class="ob-q-title">How many productive hours can you give daily? ⏱</div>
+        <div class="ob-q-subtitle">Be realistic. NEXUS will optimise within your actual capacity.</div>
+      </div>
+      <div class="ob-options-grid ob-time-grid" id="hoursOptions">
+        <div class="ob-option-grid" onclick="selectGrid(this,'hours','1-2')">
+          <span class="big-emoji">🌱</span><div class="grid-label">1 – 2 hrs</div>
+        </div>
+        <div class="ob-option-grid" onclick="selectGrid(this,'hours','3-4')">
+          <span class="big-emoji">🌿</span><div class="grid-label">3 – 4 hrs</div>
+        </div>
+        <div class="ob-option-grid" onclick="selectGrid(this,'hours','5-6')">
+          <span class="big-emoji">🌳</span><div class="grid-label">5 – 6 hrs</div>
+        </div>
+        <div class="ob-option-grid" onclick="selectGrid(this,'hours','7-8')">
+          <span class="big-emoji">⚡</span><div class="grid-label">7 – 8 hrs</div>
+        </div>
+        <div class="ob-option-grid" onclick="selectGrid(this,'hours','9-10')">
+          <span class="big-emoji">🔥</span><div class="grid-label">9 – 10 hrs</div>
+        </div>
+        <div class="ob-option-grid" onclick="selectGrid(this,'hours','10+')">
+          <span class="big-emoji">💀</span><div class="grid-label">10+ hrs</div>
+        </div>
+      </div>
+      <div class="ob-nav">
+        <button class="ob-skip" onclick="nextQ(6)">← Back</button>
+        <button class="btn btn-primary" onclick="finishOnboarding()">Build My System 🚀</button>
+      </div>
+    </div>
+
+    <!-- ── Final / Summary ── -->
+    <div class="ob-final" id="obFinal">
+      <div class="ob-final-icon">🧠</div>
+
+      <div>
+        <h2 style="font-family:var(--font-display);font-size:2rem;font-weight:800;letter-spacing:-0.03em;margin-bottom:8px">
+          Your AI profile is ready ✨
+        </h2>
+        <p style="color:var(--text-secondary)">NEXUS has built a personalised system just for you.</p>
+      </div>
+
+      <div class="ob-profile-summary" id="profileSummary">
+        <!-- Filled dynamically -->
+      </div>
+
+      <div style="width:100%;background:var(--bg-glass);border:1px solid var(--border-glass);border-radius:var(--radius-lg);padding:var(--space-lg)">
+        <div style="font-size:0.75rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:var(--space-md)">AI Coach says</div>
+        <p id="aiMessage" style="font-size:0.9375rem;color:var(--text-secondary);line-height:1.7;font-style:italic">
+          "Based on your answers, I've set up a personalised dashboard, smart habit schedule, and focus plan. Your journey starts now."
+        </p>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:var(--space-sm);width:100%">
+        <a href="dashboard.html" class="btn btn-primary btn-lg" style="justify-content:center">
+          Enter Your Dashboard →
+        </a>
+        <button class="btn btn-ghost" style="justify-content:center" onclick="location.reload()">
+          Redo questionnaire
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /ob-card -->
+
+  <script src="app.js"></script>
+  <script>
+    const TOTAL_Q = 7;
+    let currentQ = 1;
+    const answers = { focusSpan: 25, sleepHours: 7 };
+
+    function updateProgress() {
+      const pct = ((currentQ - 1) / TOTAL_Q) * 100;
+      document.getElementById('progressFill').style.width = pct + '%';
+      document.getElementById('stepLabel').textContent =
+        String(currentQ).padStart(2,'0') + ' / ' + String(TOTAL_Q).padStart(2,'0');
+    }
+
+    function nextQ(n) {
+      document.getElementById('q' + currentQ).classList.remove('active');
+      if (n >= 1 && n <= TOTAL_Q) {
+        currentQ = n;
+        document.getElementById('q' + currentQ).classList.add('active');
+        updateProgress();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    function selectOpt(el, key, val) {
+      const parent = el.parentElement;
+      parent.querySelectorAll('.ob-option').forEach(o => o.classList.remove('selected'));
+      el.classList.add('selected');
+      answers[key] = val;
+      const check = el.querySelector('.ob-opt-check');
+      if (check) check.textContent = '✓';
+    }
+
+    function selectGrid(el, key, val) {
+      const parent = el.parentElement;
+      parent.querySelectorAll('.ob-option-grid').forEach(o => o.classList.remove('selected'));
+      el.classList.add('selected');
+      answers[key] = val;
+    }
+
+    function getAIMessage(answers) {
+      const msgs = {
+        chaos: '"I see you\'re starting from scratch — that\'s actually perfect. Small wins first. I\'ve set your habits to micro-level so you build momentum without overwhelm."',
+        struggling: '"You have the drive but need better systems. I\'ve activated streak shields and smart reminders to catch you before you fall off."',
+        moderate: '"You\'re closer than you think. A few key systems away from consistent excellence. Let\'s lock in those habits."',
+        strong: '"You\'re already ahead. Let\'s now optimise your peak hours and eliminate hidden time leaks to 10x your output."',
+        elite: '"Elite mode activated. I\'ll challenge you with boss battles and advanced analytics to find your ceiling — and shatter it."',
+      };
+      return msgs[answers.discipline] || '"Your personalised AI system is ready. Let\'s build something extraordinary together."';
+    }
+
+    async function finishOnboarding() {
+      // Save answers
+      Store.set('onboarding', answers);
+      Store.set('onboardingDone', true);
+
+      // Hide all questions
+      document.querySelectorAll('.ob-question-wrap').forEach(q => q.classList.remove('active'));
+      document.getElementById('progressFill').style.width = '100%';
+      document.getElementById('stepLabel').textContent = '✓ Complete';
+
+      // Build summary
+      const summary = [
+        { key: 'Wake-up',    val: answers.wake || 'Not set' },
+        { key: 'Discipline', val: answers.discipline || 'Not set' },
+        { key: 'Focus span', val: (answers.focusSpan || 25) + ' min' },
+        { key: 'Motivation', val: answers.motivation || 'Not set' },
+        { key: 'Weakness',   val: answers.weakness || 'Not set' },
+        { key: 'Sleep',      val: (answers.sleepHours || 7) + ' hrs' },
+        { key: 'Daily hrs',  val: answers.hours || 'Not set' },
+        { key: 'User type',  val: Store.get('userType') || 'General' },
+      ];
+
+      document.getElementById('profileSummary').innerHTML = summary.map(s => `
+        <div class="ob-summary-item">
+          <div class="ob-summary-key">${s.key}</div>
+          <div class="ob-summary-val">${s.val}</div>
+        </div>
+      `).join('');
+
+      document.getElementById('aiMessage').textContent = getAIMessage(answers);
+
+      // Show final
+      await new Promise(r => setTimeout(r, 400));
+      document.getElementById('obFinal').classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      Toast.show('AI profile built successfully! 🧠', 'success');
+    }
+
+    updateProgress();
+  </script>
+</body>
+</html>

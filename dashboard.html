@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — NEXUS</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    body { background: var(--bg-void); overflow-x: hidden; }
+
+    .dashboard-layout {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      min-height: 100vh;
+    }
+
+    /* ── Sidebar ── */
+    .dash-sidebar {
+      background: var(--bg-panel);
+      backdrop-filter: blur(40px);
+      border-right: 1px solid var(--border-subtle);
+      height: 100vh;
+      position: sticky;
+      top: 0;
+      display: flex;
+      flex-direction: column;
+      padding: var(--space-lg) 0;
+      overflow-y: auto;
+      z-index: 200;
+    }
+
+    .sb-logo {
+      padding: 0 var(--space-lg) var(--space-xl);
+      font-family: var(--font-display);
+      font-size: 1.375rem;
+      font-weight: 800;
+      background: var(--grad-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .sb-section-label {
+      font-size: 0.625rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 0 var(--space-lg);
+      margin: var(--space-lg) 0 var(--space-sm);
+    }
+
+    .sb-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px var(--space-lg);
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      margin: 1px var(--space-sm);
+      border-radius: var(--radius-md);
+      position: relative;
+    }
+
+    .sb-item:hover { background: var(--bg-glass); color: var(--text-primary); }
+
+    .sb-item.active {
+      background: linear-gradient(90deg, rgba(0,212,255,0.1), rgba(123,97,255,0.05));
+      color: var(--accent-primary);
+      border: 1px solid rgba(0,212,255,0.12);
+    }
+
+    .sb-item.active::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 20%; bottom: 20%;
+      width: 3px;
+      background: var(--accent-primary);
+      border-radius: 0 999px 999px 0;
+    }
+
+    .sb-icon { font-size: 1rem; width: 20px; text-align: center; flex-shrink: 0; }
+
+    .sb-badge {
+      margin-left: auto;
+      background: var(--accent-danger);
+      color: #fff;
+      font-size: 0.6rem;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 999px;
+    }
+
+    .sb-xp-card {
+      margin: var(--space-lg) var(--space-sm) 0;
+      padding: var(--space-md);
+      background: linear-gradient(135deg, rgba(0,212,255,0.08), rgba(123,97,255,0.08));
+      border: 1px solid rgba(0,212,255,0.12);
+      border-radius: var(--radius-lg);
+    }
+
+    .sb-xp-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--space-sm);
+    }
+
+    .sb-level { font-family: var(--font-display); font-size: 0.75rem; font-weight: 800; color: var(--accent-primary); }
+    .sb-xp-num { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--text-muted); }
+
+    /* ── Main ── */
+    .dash-main { display: flex; flex-direction: column; min-height: 100vh; background: var(--bg-void); }
+
+    .dash-topbar {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(2,4,8,0.88);
+      backdrop-filter: blur(40px);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 14px var(--space-xl);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-md);
+    }
+
+    [data-theme="light"] .dash-topbar { background: rgba(240,244,248,0.92); }
+
+    .topbar-greeting { font-family: var(--font-display); font-size: 1rem; font-weight: 700; }
+    .topbar-date { font-size: 0.8125rem; color: var(--text-muted); margin-top: 1px; }
+    .topbar-right { display: flex; align-items: center; gap: var(--space-md); }
+
+    .notif-btn {
+      width: 38px; height: 38px;
+      border-radius: var(--radius-md);
+      background: var(--bg-glass);
+      border: 1px solid var(--border-glass);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 1.1rem;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .notif-btn:hover { background: var(--bg-glass-mid); border-color: var(--border-accent); }
+
+    .notif-dot {
+      position: absolute; top: 6px; right: 6px;
+      width: 8px; height: 8px;
+      background: var(--accent-danger);
+      border-radius: 50%;
+      border: 2px solid var(--bg-void);
+    }
+
+    /* ── Dash body ── */
+    .dash-body { padding: var(--space-xl); display: flex; flex-direction: column; gap: var(--space-xl); flex: 1; }
+
+    /* ── AI Banner ── */
+    .ai-banner {
+      background: linear-gradient(135deg, rgba(0,212,255,0.07), rgba(123,97,255,0.07));
+      border: 1px solid rgba(0,212,255,0.15);
+      border-radius: var(--radius-xl);
+      padding: var(--space-lg) var(--space-xl);
+      display: flex;
+      align-items: center;
+      gap: var(--space-lg);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .ai-avatar {
+      width: 48px; height: 48px; border-radius: 50%;
+      background: var(--grad-primary);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; flex-shrink: 0;
+    }
+
+    .ai-message { flex: 1; font-size: 0.9375rem; color: var(--text-secondary); line-height: 1.6; }
+    .ai-message strong { color: var(--text-primary); }
+
+    /* ── Stats Row ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-md);
+    }
+
+    .stat-c {
+      background: var(--bg-glass);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-lg);
+      padding: var(--space-lg);
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      cursor: default;
+    }
+
+    .stat-c:hover { border-color: var(--border-accent); transform: translateY(-3px); box-shadow: 0 8px 32px rgba(0,212,255,0.08); }
+
+    .stat-c-glow {
+      position: absolute; top: -20px; right: -20px;
+      width: 80px; height: 80px; border-radius: 50%;
+      filter: blur(20px); pointer-events: none;
+    }
+
+    .stat-c-icon { font-size: 1.5rem; margin-bottom: var(--space-md); display: block; }
+
+    .stat-c-val {
+      font-family: var(--font-display);
+      font-size: 2rem; font-weight: 800;
+      letter-spacing: -0.04em; line-height: 1; margin-bottom: 4px;
+    }
+
+    .stat-c-label { font-size: 0.8125rem; color: var(--text-muted); }
+    .stat-c-change { font-size: 0.75rem; font-weight: 600; margin-top: var(--space-md); display: flex; align-items: center; gap: 4px; }
+
+    /* ── Main Grid ── */
+    .dash-grid { display: grid; grid-template-columns: 1fr 340px; gap: var(--space-xl); }
+    .dash-left { display: flex; flex-direction: column; gap: var(--space-xl); }
+    .dash-right { display: flex; flex-direction: column; gap: var(--space-xl); }
+
+    /* ── Panel ── */
+    .panel { background: var(--bg-glass); border: 1px solid var(--border-glass); border-radius: var(--radius-xl); padding: var(--space-xl); }
+    .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-xl); }
+    .panel-title { font-family: var(--font-display); font-size: 1rem; font-weight: 700; }
+    .panel-action { font-size: 0.8125rem; color: var(--accent-primary); cursor: pointer; transition: all 0.15s; background: none; border: none; text-decoration: none; }
+    .panel-action:hover { color: var(--text-primary); }
+
+    /* ── Habits ── */
+    .habit-list { display: flex; flex-direction: column; gap: var(--space-sm); }
+
+    .habit-row {
+      display: flex; align-items: center; gap: var(--space-md);
+      padding: 12px var(--space-md);
+      border-radius: var(--radius-md);
+      background: var(--bg-glass);
+      border: 1px solid var(--border-subtle);
+      transition: all 0.15s; cursor: pointer;
+    }
+
+    .habit-row:hover { background: var(--bg-glass-mid); border-color: var(--border-glass); }
+    .habit-row.done { opacity: 0.55; }
+    .habit-row.done .habit-name { text-decoration: line-through; color: var(--text-muted); }
+
+    .habit-check {
+      width: 24px; height: 24px; border-radius: 50%;
+      border: 2px solid var(--border-glass);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: all 0.2s; font-size: 0.75rem;
+    }
+
+    .habit-row.done .habit-check { background: var(--accent-success); border-color: var(--accent-success); color: #000; }
+
+    .habit-icon { width: 36px; height: 36px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
+    .habit-info { flex: 1; min-width: 0; }
+    .habit-name { font-size: 0.875rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .habit-streak { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+    .habit-xp { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--accent-primary); background: rgba(0,212,255,0.08); padding: 2px 8px; border-radius: 999px; flex-shrink: 0; }
+
+    /* ── Bar Chart ── */
+    .bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 100px; }
+    .bar-col { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
+    .bar-fill { width: 100%; border-radius: 4px 4px 0 0; background: rgba(0,212,255,0.2); transition: all 0.3s; cursor: pointer; }
+    .bar-fill:hover, .bar-fill.today { background: var(--grad-primary); }
+    .bar-day { font-size: 0.6rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* ── Heatmap ── */
+    .heatmap-months { display: flex; justify-content: space-between; font-size: 0.625rem; color: var(--text-muted); margin-bottom: 4px; }
+    .heatmap-wrap { overflow-x: auto; padding-bottom: 4px; }
+    .heatmap-inner { display: grid; grid-template-rows: repeat(7,1fr); grid-auto-flow: column; gap: 3px; min-width: 600px; }
+    .hm-cell { width: 11px; height: 11px; border-radius: 2px; background: var(--bg-glass-mid); cursor: pointer; transition: transform 0.15s; }
+    .hm-cell:hover { transform: scale(1.5); }
+    .hm-cell[data-l="1"] { background: rgba(0,212,255,0.18); }
+    .hm-cell[data-l="2"] { background: rgba(0,212,255,0.38); }
+    .hm-cell[data-l="3"] { background: rgba(0,212,255,0.62); }
+    .hm-cell[data-l="4"] { background: rgba(0,212,255,0.88); }
+    .hm-legend { display: flex; align-items: center; gap: 4px; margin-top: var(--space-sm); justify-content: flex-end; }
+    .hm-legend-cell { width: 10px; height: 10px; border-radius: 2px; }
+
+    /* ── Goals ── */
+    .goal-item { display: flex; flex-direction: column; gap: 8px; padding: var(--space-md); background: var(--bg-glass); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); transition: all 0.15s; }
+    .goal-item:hover { border-color: var(--border-glass); background: var(--bg-glass-mid); }
+    .goal-top { display: flex; align-items: center; justify-content: space-between; gap: var(--space-sm); }
+    .goal-name { font-size: 0.875rem; font-weight: 600; }
+    .goal-pct { font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent-primary); }
+    .goal-meta { font-size: 0.75rem; color: var(--text-muted); }
+
+    /* ── Timer ── */
+    .focus-panel { text-align: center; }
+    .timer-ring { position: relative; width: 180px; height: 180px; margin: 0 auto var(--space-lg); }
+    .timer-ring svg { transform: rotate(-90deg); }
+    .timer-display { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .timer-time { font-family: var(--font-mono); font-size: 2.25rem; font-weight: 500; letter-spacing: 0.05em; line-height: 1; }
+    .timer-label { font-size: 0.6875rem; color: var(--text-muted); margin-top: 4px; letter-spacing: 0.08em; text-transform: uppercase; }
+    .timer-controls { display: flex; align-items: center; justify-content: center; gap: var(--space-md); }
+    .timer-btn { width: 48px; height: 48px; border-radius: 50%; border: 2px solid var(--border-glass); background: var(--bg-glass); color: var(--text-primary); font-size: 1.25rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+    .timer-btn:hover { background: var(--bg-glass-mid); border-color: var(--border-accent); }
+    .timer-btn.primary { width: 60px; height: 60px; background: var(--grad-primary); border-color: transparent; font-size: 1.5rem; color: #000; box-shadow: 0 4px 24px rgba(0,212,255,0.35); }
+    .timer-btn.primary:hover { transform: scale(1.08); box-shadow: 0 8px 32px rgba(0,212,255,0.5); }
+    .timer-mode-tabs { display: flex; background: var(--bg-glass); border: 1px solid var(--border-subtle); border-radius: 999px; padding: 3px; margin-bottom: var(--space-lg); }
+    .timer-tab { flex: 1; padding: 6px 12px; border-radius: 999px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.15s; text-align: center; color: var(--text-muted); border: none; background: none; }
+    .timer-tab.active { background: var(--grad-primary); color: #000; }
+
+    /* ── Mood ── */
+    .mood-row { display: flex; gap: var(--space-sm); justify-content: space-between; }
+    .mood-btn { flex: 1; padding: 10px 4px; border-radius: var(--radius-md); background: var(--bg-glass); border: 2px solid var(--border-subtle); cursor: pointer; text-align: center; font-size: 1.5rem; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .mood-btn span.mlabel { font-size: 0.625rem; color: var(--text-muted); font-weight: 600; }
+    .mood-btn:hover { border-color: var(--border-glass); transform: translateY(-2px); }
+    .mood-btn.selected { border-color: var(--accent-primary); background: rgba(0,212,255,0.06); }
+
+    /* ── AI Chat ── */
+    .ai-chat-messages { display: flex; flex-direction: column; gap: var(--space-sm); max-height: 240px; overflow-y: auto; margin-bottom: var(--space-md); padding-right: 4px; }
+    .chat-bubble { max-width: 85%; padding: 10px 14px; border-radius: 16px; font-size: 0.875rem; line-height: 1.5; }
+    .chat-bubble.ai { background: var(--bg-glass-mid); border: 1px solid var(--border-glass); border-bottom-left-radius: 4px; align-self: flex-start; color: var(--text-primary); }
+    .chat-bubble.user { background: linear-gradient(135deg, rgba(0,212,255,0.15), rgba(123,97,255,0.15)); border: 1px solid rgba(0,212,255,0.2); border-bottom-right-radius: 4px; align-self: flex-end; color: var(--text-primary); }
+    .chat-input-row { display: flex; gap: var(--space-sm); }
+    .chat-input { flex: 1; background: var(--bg-glass); border: 1px solid var(--border-glass); border-radius: 999px; padding: 10px 16px; font-family: var(--font-body); font-size: 0.875rem; color: var(--text-primary); outline: none; transition: all 0.2s; }
+    .chat-input:focus { border-color: var(--accent-primary); background: var(--bg-glass-mid); }
+    .chat-input::placeholder { color: var(--text-muted); }
+    .chat-send { width: 40px; height: 40px; border-radius: 50%; background: var(--grad-primary); border: none; color: #000; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0; }
+    .chat-send:hover { transform: scale(1.08); }
+
+    /* ── Toast ── */
+    .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9000; display: flex; flex-direction: column; gap: 8px; }
+    .toast { background: rgba(8,16,28,0.97); backdrop-filter: blur(40px); border: 1px solid var(--border-glass); border-radius: var(--radius-lg); padding: 14px 18px; display: flex; align-items: center; gap: 12px; min-width: 280px; box-shadow: 0 24px 64px rgba(0,0,0,0.6); animation: slideInRight 0.3s ease; }
+    @keyframes slideInRight { from { opacity:0; transform: translateX(30px); } to { opacity:1; transform: translateX(0); } }
+
+    /* ── Responsive ── */
+    @media (max-width: 1100px) {
+      .dash-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 900px) {
+      .dashboard-layout { grid-template-columns: 1fr; }
+      .dash-sidebar { display: none; }
+      .stats-row { grid-template-columns: repeat(2,1fr); }
+      .dash-body { padding: var(--space-md); }
+    }
+
+    @media (max-width: 500px) {
+      .dash-topbar { padding: 12px var(--space-md); }
+      .ai-banner { flex-direction: column; text-align: center; padding: var(--space-md); }
+      .ai-banner .btn { width: 100%; justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+<div class="dashboard-layout">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="dash-sidebar">
+    <div class="sb-logo">NEXUS</div>
+
+    <div class="sb-section-label">Main</div>
+    <a href="dashboard.html" class="sb-item active"><span class="sb-icon">📊</span> Dashboard</a>
+    <a href="habits.html" class="sb-item"><span class="sb-icon">✅</span> Habits</a>
+    <a href="focus.html" class="sb-item"><span class="sb-icon">⏱</span> Focus Timer</a>
+    <a href="analytics.html" class="sb-item"><span class="sb-icon">📈</span> Analytics</a>
+
+    <div class="sb-section-label">Track</div>
+    <a href="#" class="sb-item"><span class="sb-icon">🎯</span> Goals</a>
+    <a href="#" class="sb-item"><span class="sb-icon">😊</span> Mood</a>
+    <a href="#" class="sb-item"><span class="sb-icon">📓</span> Journal</a>
+    <a href="#" class="sb-item"><span class="sb-icon">💤</span> Sleep</a>
+
+    <div class="sb-section-label">Grow</div>
+    <a href="#" class="sb-item"><span class="sb-icon">🤖</span> AI Coach<span class="sb-badge">2</span></a>
+    <a href="#" class="sb-item"><span class="sb-icon">🏆</span> Achievements</a>
+    <a href="#" class="sb-item"><span class="sb-icon">👥</span> Community</a>
+
+    <div class="sb-section-label">Account</div>
+    <a href="profile.html" class="sb-item"><span class="sb-icon">👤</span> Profile</a>
+    <a href="settings.html" class="sb-item"><span class="sb-icon">⚙️</span> Settings</a>
+
+    <div class="sb-xp-card">
+      <div class="sb-xp-top">
+        <span class="sb-level">⚡ Level 7</span>
+        <span class="sb-xp-num">2840 XP</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-bar-fill" style="width:81%"></div>
+      </div>
+      <div style="font-size:0.625rem;color:var(--text-muted);margin-top:4px">660 XP to Level 8</div>
+    </div>
+  </aside>
+
+  <!-- ── MAIN ── -->
+  <div class="dash-main">
+
+    <header class="dash-topbar">
+      <div>
+        <div class="topbar-greeting" id="greeting">Good morning, Arjun 👋</div>
+        <div class="topbar-date" id="dateDisplay">Loading...</div>
+      </div>
+      <div class="topbar-right">
+        <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" onclick="toggleTheme()">🌙</button>
+        <button class="notif-btn" onclick="showToast('3 new achievements unlocked! 🏆','xp')">
+          🔔<div class="notif-dot"></div>
+        </button>
+        <div class="avatar avatar-md" style="cursor:pointer;width:36px;height:36px;border-radius:50%;background:var(--grad-primary);display:flex;align-items:center;justify-content:center;font-weight:800;color:#000" onclick="window.location='profile.html'">AK</div>
+      </div>
+    </header>
+
+    <div class="dash-body">
+
+      <!-- AI Banner -->
+      <div class="ai-banner">
+        <div class="ai-avatar">🧠</div>
+        <div class="ai-message">
+          <strong>Your AI Coach:</strong> You've hit a <strong>14-day streak</strong> — incredible! 🔥
+          Your focus peaked at <strong>7h</strong> yesterday. You're most productive
+          between <strong>9–11 AM</strong>. Block that time for your hardest tasks today.
+          <strong>3 habits left</strong> for a perfect day.
+        </div>
+        <button class="btn btn-glass btn-sm" style="flex-shrink:0" onclick="document.getElementById('aiChatPanel').scrollIntoView({behavior:'smooth'})">Chat →</button>
+      </div>
+
+      <!-- Stat Cards -->
+      <div class="stats-row">
+        <div class="stat-c">
+          <div class="stat-c-glow" style="background:rgba(255,167,38,0.15)"></div>
+          <span class="stat-c-icon">🔥</span>
+          <div class="stat-c-val" id="streakVal" style="color:var(--accent-warning)">14</div>
+          <div class="stat-c-label">Day Streak</div>
+          <div class="stat-c-change" style="color:var(--accent-success)">↑ Personal best!</div>
+        </div>
+        <div class="stat-c">
+          <div class="stat-c-glow" style="background:rgba(0,212,255,0.12)"></div>
+          <span class="stat-c-icon">⚡</span>
+          <div class="stat-c-val" id="xpVal" style="background:var(--grad-primary);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">2,840</div>
+          <div class="stat-c-label">Total XP</div>
+          <div class="stat-c-change" style="color:var(--accent-success)">↑ +240 this week</div>
+        </div>
+        <div class="stat-c">
+          <div class="stat-c-glow" style="background:rgba(0,229,160,0.1)"></div>
+          <span class="stat-c-icon">⏱</span>
+          <div class="stat-c-val" style="color:var(--accent-success)">6h 30m</div>
+          <div class="stat-c-label">Focus Today</div>
+          <div class="stat-c-change" style="color:var(--accent-success)">↑ 82% of daily goal</div>
+        </div>
+        <div class="stat-c">
+          <div class="stat-c-glow" style="background:rgba(123,97,255,0.1)"></div>
+          <span class="stat-c-icon">✅</span>
+          <div class="stat-c-val" id="habitsVal" style="color:var(--accent-secondary)">5/8</div>
+          <div class="stat-c-label">Habits Done</div>
+          <div class="stat-c-change" style="color:var(--accent-warning)">→ 3 remaining</div>
+        </div>
+      </div>
+
+      <!-- Main Grid -->
+      <div class="dash-grid">
+
+        <!-- LEFT -->
+        <div class="dash-left">
+
+          <!-- Focus Chart -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">📈 Focus Hours — This Week</span>
+              <a href="analytics.html" class="panel-action">Full view →</a>
+            </div>
+            <div class="bar-chart" id="focusChart"></div>
+          </div>
+
+          <!-- Habits -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">✅ Today's Habits</span>
+              <a href="habits.html" class="panel-action">All habits →</a>
+            </div>
+            <div class="habit-list" id="habitList"></div>
+          </div>
+
+          <!-- Heatmap -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">📅 Activity Heatmap — 2025</span>
+              <span style="font-size:0.75rem;color:var(--text-muted)">365 days</span>
+            </div>
+            <div class="heatmap-months">
+              <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span>
+              <span>May</span><span>Jun</span><span>Jul</span><span>Aug</span>
+              <span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span>
+            </div>
+            <div class="heatmap-wrap">
+              <div class="heatmap-inner" id="heatmapGrid"></div>
+            </div>
+            <div class="hm-legend">
+              <span style="font-size:0.625rem;color:var(--text-muted)">Less</span>
+              <div class="hm-legend-cell" style="background:var(--bg-glass-mid)"></div>
+              <div class="hm-legend-cell" style="background:rgba(0,212,255,0.18)"></div>
+              <div class="hm-legend-cell" style="background:rgba(0,212,255,0.42)"></div>
+              <div class="hm-legend-cell" style="background:rgba(0,212,255,0.68)"></div>
+              <div class="hm-legend-cell" style="background:rgba(0,212,255,0.92)"></div>
+              <span style="font-size:0.625rem;color:var(--text-muted)">More</span>
+            </div>
+          </div>
+
+          <!-- Goals -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">🎯 Active Goals</span>
+              <button class="panel-action" onclick="showToast('Goal added!','success')">+ Add goal</button>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:var(--space-sm)" id="goalsList"></div>
+          </div>
+        </div>
+
+        <!-- RIGHT -->
+        <div class="dash-right">
+
+          <!-- Timer -->
+          <div class="panel focus-panel">
+            <div class="panel-header">
+              <span class="panel-title">⏱ Focus Timer</span>
+              <a href="focus.html" class="panel-action">Full mode →</a>
+            </div>
+            <div class="timer-mode-tabs">
+              <button class="timer-tab active" onclick="setMode(this,25,'Pomodoro')">Pomodoro</button>
+              <button class="timer-tab" onclick="setMode(this,5,'Short Break')">Short</button>
+              <button class="timer-tab" onclick="setMode(this,15,'Long Break')">Long</button>
+            </div>
+            <div class="timer-ring">
+              <svg width="180" height="180" viewBox="0 0 180 180">
+                <circle cx="90" cy="90" r="80" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="8"/>
+                <circle cx="90" cy="90" r="80" fill="none" id="timerArc"
+                  stroke="url(#tGrad)" stroke-width="8" stroke-linecap="round"
+                  stroke-dasharray="502" stroke-dashoffset="0"/>
+                <defs>
+                  <linearGradient id="tGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#00d4ff"/>
+                    <stop offset="100%" stop-color="#7b61ff"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div class="timer-display">
+                <div class="timer-time" id="timerDisplay">25:00</div>
+                <div class="timer-label" id="timerLabel">POMODORO</div>
+              </div>
+            </div>
+            <div class="timer-controls">
+              <button class="timer-btn" onclick="resetTimer()" title="Reset">↺</button>
+              <button class="timer-btn primary" id="timerPlayBtn" onclick="toggleTimer()">▶</button>
+              <button class="timer-btn" onclick="skipTimer()" title="Skip">⏭</button>
+            </div>
+            <div style="margin-top:var(--space-lg);padding-top:var(--space-lg);border-top:1px solid var(--border-subtle)">
+              <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:var(--text-muted)">
+                <span>Sessions today</span>
+                <span style="color:var(--accent-primary);font-weight:700">4 / 8</span>
+              </div>
+              <div class="progress-bar" style="margin-top:6px">
+                <div class="progress-bar-fill" style="width:50%"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mood -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">😊 How are you feeling?</span>
+            </div>
+            <div class="mood-row">
+              <button class="mood-btn" onclick="selectMood(this,'😫','Awful')">😫<span class="mlabel">Awful</span></button>
+              <button class="mood-btn" onclick="selectMood(this,'😕','Bad')">😕<span class="mlabel">Bad</span></button>
+              <button class="mood-btn" onclick="selectMood(this,'😐','Okay')">😐<span class="mlabel">Okay</span></button>
+              <button class="mood-btn" onclick="selectMood(this,'😊','Good')">😊<span class="mlabel">Good</span></button>
+              <button class="mood-btn" onclick="selectMood(this,'🤩','Great')">🤩<span class="mlabel">Great</span></button>
+            </div>
+            <div id="moodNote" style="display:none;margin-top:var(--space-md)">
+              <input type="text" class="input-field" placeholder="What's on your mind?" />
+            </div>
+          </div>
+
+          <!-- AI Chat -->
+          <div class="panel" id="aiChatPanel">
+            <div class="panel-header">
+              <span class="panel-title">🤖 AI Coach</span>
+              <span class="badge badge-success" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;font-size:0.7rem;font-weight:700;background:rgba(0,229,160,0.12);color:var(--accent-success);border:1px solid rgba(0,229,160,0.2)">● Online</span>
+            </div>
+            <div class="ai-chat-messages" id="chatMessages">
+              <div class="chat-bubble ai">Hey! 👋 You're crushing it today. What's your focus block for this session?</div>
+              <div class="chat-bubble ai">I noticed you skipped journaling yesterday. Want a 2-min reflection prompt?</div>
+            </div>
+            <div class="chat-input-row">
+              <input class="chat-input" id="chatInput" placeholder="Ask your AI coach…" onkeydown="if(event.key==='Enter')sendChat()" />
+              <button class="chat-send" onclick="sendChat()">↑</button>
+            </div>
+          </div>
+
+          <!-- Quick Actions -->
+          <div class="panel">
+            <div class="panel-header"><span class="panel-title">⚡ Quick Actions</span></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-sm)">
+              <button class="btn btn-glass w-full" style="justify-content:center;font-size:0.875rem" onclick="window.location='focus.html'">⏱ Start Focus</button>
+              <button class="btn btn-glass w-full" style="justify-content:center;font-size:0.875rem" onclick="showToast('Journal opened! 📓','info')">📓 Journal</button>
+              <button class="btn btn-glass w-full" style="justify-content:center;font-size:0.875rem" onclick="showToast('Water logged! +10 XP 💧','success')">💧 Log Water</button>
+              <button class="btn btn-glass w-full" style="justify-content:center;font-size:0.875rem" onclick="window.location='analytics.html'">📊 Analytics</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+/* ── Inline utilities (self-contained, no app.js dependency) ── */
+
+/* Theme */
+function toggleTheme() {
+  const html = document.documentElement;
+  const curr = html.getAttribute('data-theme') || 'dark';
+  const next = curr === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  document.getElementById('themeToggle').textContent = next === 'dark' ? '🌙' : '☀️';
+  try { localStorage.setItem('nexus-theme', next); } catch(e){}
+}
+
+/* Restore theme */
+(function(){
+  try {
+    const t = localStorage.getItem('nexus-theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', t);
+    document.addEventListener('DOMContentLoaded', () => {
+      const btn = document.getElementById('themeToggle');
+      if (btn) btn.textContent = t === 'dark' ? '🌙' : '☀️';
+    });
+  } catch(e){}
+})();
+
+/* Toast */
+function showToast(msg, type) {
+  const icons = { info:'ℹ️', success:'✅', warning:'⚠️', error:'❌', xp:'⚡' };
+  const colors = { info:'var(--accent-primary)', success:'var(--accent-success)', warning:'var(--accent-warning)', error:'var(--accent-danger)', xp:'var(--accent-secondary)' };
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.style.borderLeft = '3px solid ' + (colors[type] || colors.info);
+  t.innerHTML = `<span style="font-size:1.25rem">${icons[type]||'ℹ️'}</span><span style="font-size:0.9375rem;color:var(--text-primary)">${msg}</span>`;
+  c.appendChild(t);
+  setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity 0.3s'; setTimeout(()=>t.remove(), 300); }, 3000);
+}
+
+/* Greeting */
+(function() {
+  const h = new Date().getHours();
+  const g = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  let name = 'Arjun';
+  try { name = JSON.parse(localStorage.getItem('nexus_userName') || '"Arjun"'); } catch(e){}
+  document.getElementById('greeting').textContent = g + ', ' + name + ' 👋';
+  document.getElementById('dateDisplay').textContent =
+    new Date().toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+})();
+
+/* ── Focus Bar Chart ── */
+const focusData = [
+  { day:'Mon', hrs:3.5 }, { day:'Tue', hrs:5.0 }, { day:'Wed', hrs:4.2 },
+  { day:'Thu', hrs:6.8 }, { day:'Fri', hrs:5.5 }, { day:'Sat', hrs:7.2 },
+  { day:'Sun', hrs:6.5, today:true },
+];
+const maxH = Math.max(...focusData.map(d=>d.hrs));
+document.getElementById('focusChart').innerHTML = focusData.map(d=>`
+  <div class="bar-col">
+    <div class="bar-fill${d.today?' today':''}" style="height:${(d.hrs/maxH)*90}px" title="${d.hrs}h focus"></div>
+    <div class="bar-day">${d.day}</div>
+  </div>
+`).join('');
+
+/* ── Habits ── */
+const habits = [
+  { icon:'🏃', name:'Morning Run',       streak:14, xp:30, done:true,  color:'rgba(255,107,107,0.12)' },
+  { icon:'📚', name:'Read 30 pages',     streak:7,  xp:25, done:true,  color:'rgba(0,212,255,0.12)' },
+  { icon:'🧘', name:'Meditation',        streak:14, xp:20, done:true,  color:'rgba(123,97,255,0.12)' },
+  { icon:'💧', name:'8 glasses of water',streak:10, xp:15, done:true,  color:'rgba(0,229,160,0.12)' },
+  { icon:'📓', name:'Journal entry',     streak:5,  xp:20, done:true,  color:'rgba(255,217,61,0.12)' },
+  { icon:'⏱', name:'2h Deep Work',      streak:8,  xp:50, done:false, color:'rgba(0,212,255,0.12)' },
+  { icon:'🌙', name:'Sleep by 11 PM',    streak:3,  xp:25, done:false, color:'rgba(123,97,255,0.12)' },
+  { icon:'💪', name:'Workout',           streak:6,  xp:35, done:false, color:'rgba(255,107,107,0.12)' },
+];
+
+function renderHabits() {
+  document.getElementById('habitList').innerHTML = habits.map((h,i)=>`
+    <div class="habit-row${h.done?' done':''}" onclick="toggleHabit(${i})">
+      <div class="habit-check">${h.done?'✓':''}</div>
+      <div class="habit-icon" style="background:${h.color}">${h.icon}</div>
+      <div class="habit-info">
+        <div class="habit-name">${h.name}</div>
+        <div class="habit-streak">🔥 ${h.streak}-day streak</div>
+      </div>
+      <div class="habit-xp">+${h.xp} XP</div>
+    </div>
+  `).join('');
+}
+
+function toggleHabit(i) {
+  habits[i].done = !habits[i].done;
+  const done = habits.filter(h=>h.done).length;
+  document.getElementById('habitsVal').textContent = done + '/' + habits.length;
+  renderHabits();
+  if (habits[i].done) showToast('+' + habits[i].xp + ' XP — ' + habits[i].name, 'xp');
+}
+
+renderHabits();
+
+/* ── Heatmap ── */
+(function(){
+  const grid = document.getElementById('heatmapGrid');
+  let html = '';
+  for (let i=0; i<365; i++) {
+    const r = Math.random();
+    const l = r<0.3?0 : r<0.5?1 : r<0.7?2 : r<0.88?3 : 4;
+    html += `<div class="hm-cell" data-l="${l}" title="Level ${l}"></div>`;
+  }
+  grid.innerHTML = html;
+})();
+
+/* ── Goals ── */
+const goals = [
+  { name:'Complete JEE Syllabus',   pct:68, deadline:'Dec 2025', color:'#00d4ff' },
+  { name:'Read 52 books this year', pct:46, deadline:'Dec 2025', color:'#7b61ff' },
+  { name:'Run 5K under 25 min',     pct:80, deadline:'Jul 2025', color:'#00e5a0' },
+  { name:'Build meditation habit',  pct:92, deadline:'Ongoing',  color:'#ffd93d' },
+];
+document.getElementById('goalsList').innerHTML = goals.map(g=>`
+  <div class="goal-item">
+    <div class="goal-top">
+      <div class="goal-name">${g.name}</div>
+      <div class="goal-pct">${g.pct}%</div>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-bar-fill" style="width:${g.pct}%;background:linear-gradient(90deg,${g.color},${g.color}88)"></div>
+    </div>
+    <div class="goal-meta">📅 ${g.deadline}</div>
+  </div>
+`).join('');
+
+/* ── Pomodoro Timer ── */
+let timerSecs = 1500, timerTotal = 1500;
+let timerRunning = false, timerInterval = null, timerMode = 'Pomodoro';
+
+function fmt(s) {
+  return String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0');
+}
+
+function updateTimerUI() {
+  document.getElementById('timerDisplay').textContent = fmt(timerSecs);
+  const offset = 502 * (1 - timerSecs / timerTotal);
+  document.getElementById('timerArc').style.strokeDashoffset = offset;
+}
+
+function toggleTimer() {
+  timerRunning = !timerRunning;
+  const btn = document.getElementById('timerPlayBtn');
+  if (timerRunning) {
+    btn.textContent = '⏸';
+    timerInterval = setInterval(() => {
+      if (timerSecs > 0) { timerSecs--; updateTimerUI(); }
+      else {
+        clearInterval(timerInterval); timerRunning = false; btn.textContent = '▶';
+        showToast(timerMode + ' complete! +50 XP 🎉', 'xp');
+      }
+    }, 1000);
+  } else {
+    clearInterval(timerInterval); btn.textContent = '▶';
+  }
+}
+
+function resetTimer() {
+  clearInterval(timerInterval); timerRunning = false;
+  timerSecs = timerTotal;
+  document.getElementById('timerPlayBtn').textContent = '▶';
+  updateTimerUI();
+}
+
+function skipTimer() {
+  clearInterval(timerInterval); timerRunning = false;
+  timerSecs = 0; updateTimerUI();
+  document.getElementById('timerPlayBtn').textContent = '▶';
+  showToast('Session skipped', 'info');
+}
+
+function setMode(btn, mins, label) {
+  document.querySelectorAll('.timer-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  timerMode = label; timerTotal = mins * 60; timerSecs = timerTotal;
+  timerRunning = false; clearInterval(timerInterval);
+  document.getElementById('timerPlayBtn').textContent = '▶';
+  document.getElementById('timerLabel').textContent = label.toUpperCase();
+  updateTimerUI();
+}
+
+updateTimerUI();
+
+/* ── Mood ── */
+function selectMood(btn, emoji, label) {
+  document.querySelectorAll('.mood-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  document.getElementById('moodNote').style.display = 'block';
+  showToast('Mood logged: ' + emoji + ' ' + label + ' · +10 XP', 'success');
+}
+
+/* ── AI Chat ── */
+const aiReplies = [
+  "Great question! Based on your patterns, I'd suggest a 90-min deep work block starting now. 🧠",
+  "You're on a 14-day streak — don't break it. Even 10 min counts tonight. 🔥",
+  "Your focus drops after 3 PM. Try a 10-min walk and come back stronger. 💪",
+  "Mood and productivity are strongly correlated for you. Keep that momentum! 📈",
+  "Progress > perfection. Even a 50% day builds the habit. You've got this. ⚡",
+  "I've scheduled a recovery block for tomorrow. Burnout prevention activated. 🛡️",
+];
+let replyIdx = 0;
+
+function sendChat() {
+  const input = document.getElementById('chatInput');
+  const msg = input.value.trim();
+  if (!msg) return;
+  const msgs = document.getElementById('chatMessages');
+
+  const u = document.createElement('div');
+  u.className = 'chat-bubble user';
+  u.textContent = msg;
+  msgs.appendChild(u);
+  input.value = '';
+  msgs.scrollTop = msgs.scrollHeight;
+
+  setTimeout(() => {
+    const a = document.createElement('div');
+    a.className = 'chat-bubble ai';
+    a.textContent = aiReplies[replyIdx++ % aiReplies.length];
+    msgs.appendChild(a);
+    msgs.scrollTop = msgs.scrollHeight;
+  }, 800);
+}
+</script>
+</body>
+</html>
