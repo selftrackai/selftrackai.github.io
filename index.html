@@ -1,0 +1,1306 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NEXUS — Your AI Life Operating System</title>
+  <meta name="description" content="NEXUS transforms your ambition into achievement. The world's most intelligent personal growth platform powered by AI." />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* ── Hero Section ── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      padding-top: 80px;
+    }
+
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(0, 212, 255, 0.12), transparent),
+        radial-gradient(ellipse 60% 50% at 80% 50%, rgba(123, 97, 255, 0.08), transparent),
+        radial-gradient(ellipse 50% 40% at 20% 80%, rgba(0, 229, 160, 0.06), transparent);
+    }
+
+    .hero-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--border-subtle) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
+      opacity: 0.5;
+    }
+
+    .hero-orb-1 {
+      width: 600px; height: 600px;
+      top: -200px; left: -200px;
+      background: radial-gradient(circle, rgba(0, 212, 255, 0.08), transparent 70%);
+    }
+
+    .hero-orb-2 {
+      width: 500px; height: 500px;
+      bottom: -150px; right: -100px;
+      background: radial-gradient(circle, rgba(123, 97, 255, 0.1), transparent 70%);
+      animation-delay: -3s;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      max-width: 900px;
+      padding: 0 var(--space-xl);
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-sm);
+      padding: 6px 16px 6px 8px;
+      background: var(--bg-glass);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-pill);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: var(--space-xl);
+      animation: fadeInUp 0.5s ease forwards;
+    }
+
+    .hero-badge-dot {
+      width: 24px; height: 24px;
+      background: var(--grad-primary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+    }
+
+    .hero-headline {
+      font-size: clamp(3rem, 7vw, 6.5rem);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+      margin-bottom: var(--space-lg);
+      animation: fadeInUp 0.6s ease 0.1s both;
+    }
+
+    .hero-headline .highlight {
+      background: var(--grad-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      position: relative;
+    }
+
+    .hero-headline .highlight::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--grad-primary);
+      border-radius: var(--radius-pill);
+      opacity: 0.4;
+    }
+
+    .hero-subhead {
+      font-size: clamp(1rem, 2vw, 1.25rem);
+      color: var(--text-secondary);
+      max-width: 600px;
+      margin: 0 auto var(--space-2xl);
+      line-height: 1.7;
+      animation: fadeInUp 0.6s ease 0.2s both;
+    }
+
+    .hero-cta {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-md);
+      flex-wrap: wrap;
+      animation: fadeInUp 0.6s ease 0.3s both;
+    }
+
+    .hero-stats {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-2xl);
+      margin-top: var(--space-3xl);
+      padding-top: var(--space-xl);
+      border-top: 1px solid var(--border-subtle);
+      animation: fadeInUp 0.6s ease 0.5s both;
+    }
+
+    .hero-stat-value {
+      font-family: var(--font-display);
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      background: var(--grad-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-stat-label {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* ── Dashboard Preview ── */
+    .preview-section {
+      padding: var(--space-3xl) 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .preview-frame {
+      background: var(--bg-glass);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-xl);
+      padding: var(--space-md);
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow-xl), 0 0 120px rgba(0, 212, 255, 0.05);
+    }
+
+    .preview-titlebar {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      padding-bottom: var(--space-md);
+      border-bottom: 1px solid var(--border-subtle);
+      margin-bottom: var(--space-md);
+    }
+
+    .preview-dot {
+      width: 12px; height: 12px; border-radius: 50%;
+    }
+
+    .preview-inner {
+      background: var(--bg-deep);
+      border-radius: var(--radius-lg);
+      padding: var(--space-lg);
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: var(--space-md);
+      min-height: 420px;
+    }
+
+    .preview-sidebar {
+      background: var(--bg-panel);
+      border-radius: var(--radius-md);
+      padding: var(--space-md);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .preview-nav-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      padding: 8px var(--space-md);
+      border-radius: var(--radius-sm);
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .preview-nav-item.active {
+      background: rgba(0, 212, 255, 0.1);
+      color: var(--accent-primary);
+    }
+
+    .preview-main {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: var(--space-md);
+    }
+
+    .preview-top-cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-sm);
+    }
+
+    .preview-mini-card {
+      background: var(--bg-glass);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: var(--space-md);
+    }
+
+    .preview-mini-val {
+      font-family: var(--font-display);
+      font-size: 1.375rem;
+      font-weight: 800;
+      background: var(--grad-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .preview-mini-label {
+      font-size: 0.6875rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .preview-bar {
+      height: 4px;
+      background: var(--bg-glass-mid);
+      border-radius: var(--radius-pill);
+      margin-top: 8px;
+      overflow: hidden;
+    }
+
+    .preview-bar-fill {
+      height: 100%;
+      background: var(--grad-primary);
+      border-radius: var(--radius-pill);
+    }
+
+    .preview-charts {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-sm);
+    }
+
+    .preview-chart-card {
+      background: var(--bg-glass);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: var(--space-md);
+    }
+
+    .preview-chart-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-bottom: var(--space-sm);
+    }
+
+    .mini-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 4px;
+      height: 60px;
+    }
+
+    .mini-bar {
+      flex: 1;
+      border-radius: 3px 3px 0 0;
+      background: rgba(0, 212, 255, 0.3);
+      transition: var(--transition-smooth);
+    }
+
+    .mini-bar:hover { background: var(--accent-primary); }
+
+    /* ── Features ── */
+    .features-section {
+      padding: var(--space-3xl) 0;
+      position: relative;
+    }
+
+    .section-label {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent-primary);
+      margin-bottom: var(--space-lg);
+    }
+
+    .section-title {
+      font-size: clamp(2rem, 4vw, 3.5rem);
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+      margin-bottom: var(--space-lg);
+    }
+
+    .section-desc {
+      font-size: 1.125rem;
+      color: var(--text-secondary);
+      max-width: 580px;
+      line-height: 1.7;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-lg);
+      margin-top: var(--space-2xl);
+    }
+
+    .feature-card {
+      padding: var(--space-xl);
+      border-radius: var(--radius-xl);
+      background: var(--bg-glass);
+      border: 1px solid var(--border-glass);
+      position: relative;
+      overflow: hidden;
+      transition: var(--transition-smooth);
+      cursor: default;
+    }
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--grad-glass);
+      opacity: 0;
+      transition: var(--transition-smooth);
+    }
+
+    .feature-card:hover {
+      border-color: var(--border-accent);
+      transform: translateY(-6px);
+      box-shadow: var(--shadow-lg), var(--glow-primary);
+    }
+
+    .feature-card:hover::before { opacity: 1; }
+
+    .feature-icon {
+      width: 52px; height: 52px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: var(--space-lg);
+      position: relative;
+    }
+
+    .feature-icon-1 { background: rgba(0, 212, 255, 0.12); }
+    .feature-icon-2 { background: rgba(123, 97, 255, 0.12); }
+    .feature-icon-3 { background: rgba(0, 229, 160, 0.12); }
+    .feature-icon-4 { background: rgba(255, 217, 61, 0.12); }
+    .feature-icon-5 { background: rgba(255, 107, 107, 0.12); }
+    .feature-icon-6 { background: rgba(255, 107, 255, 0.12); }
+
+    .feature-title {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: var(--space-sm);
+    }
+
+    .feature-desc {
+      font-size: 0.9375rem;
+      color: var(--text-secondary);
+      line-height: 1.65;
+    }
+
+    /* ── User Types ── */
+    .user-types-section {
+      padding: var(--space-3xl) 0;
+    }
+
+    .user-types-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-md);
+      margin-top: var(--space-2xl);
+    }
+
+    .user-type-card {
+      padding: var(--space-lg);
+      border-radius: var(--radius-lg);
+      background: var(--bg-glass);
+      border: 1px solid var(--border-glass);
+      text-align: center;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+    }
+
+    .user-type-card:hover {
+      border-color: var(--border-accent);
+      background: var(--bg-glass-mid);
+      transform: translateY(-4px);
+    }
+
+    .user-type-emoji {
+      font-size: 2.5rem;
+      display: block;
+      margin-bottom: var(--space-md);
+    }
+
+    .user-type-name {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .user-type-desc {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+    }
+
+    /* ── Gamification ── */
+    .gamification-section {
+      padding: var(--space-3xl) 0;
+      position: relative;
+    }
+
+    .gamification-showcase {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-2xl);
+      align-items: center;
+      margin-top: var(--space-2xl);
+    }
+
+    .level-card {
+      background: var(--bg-glass);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-xl);
+      padding: var(--space-xl);
+    }
+
+    .level-header {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      margin-bottom: var(--space-xl);
+    }
+
+    .level-badge {
+      width: 60px; height: 60px;
+      border-radius: var(--radius-md);
+      background: var(--grad-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 900;
+      color: #000;
+    }
+
+    .achievements-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-sm);
+      margin-top: var(--space-lg);
+    }
+
+    .achievement {
+      aspect-ratio: 1;
+      border-radius: var(--radius-md);
+      background: var(--bg-glass-mid);
+      border: 1px solid var(--border-glass);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+      position: relative;
+    }
+
+    .achievement:hover {
+      transform: scale(1.1);
+      border-color: var(--accent-primary);
+      box-shadow: var(--glow-primary);
+    }
+
+    .achievement.locked {
+      opacity: 0.3;
+      filter: grayscale(1);
+    }
+
+    /* ── Testimonials ── */
+    .testimonials-section {
+      padding: var(--space-3xl) 0;
+    }
+
+    .testimonials-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-lg);
+      margin-top: var(--space-2xl);
+    }
+
+    .testimonial-card {
+      padding: var(--space-xl);
+      border-radius: var(--radius-xl);
+      background: var(--bg-glass);
+      border: 1px solid var(--border-glass);
+      position: relative;
+      overflow: hidden;
+      transition: var(--transition-smooth);
+    }
+
+    .testimonial-card::before {
+      content: '"';
+      position: absolute;
+      top: -20px;
+      right: var(--space-xl);
+      font-size: 10rem;
+      font-family: var(--font-display);
+      font-weight: 900;
+      color: rgba(0, 212, 255, 0.05);
+      line-height: 1;
+      pointer-events: none;
+    }
+
+    .testimonial-text {
+      font-size: 1rem;
+      line-height: 1.7;
+      color: var(--text-secondary);
+      margin-bottom: var(--space-lg);
+    }
+
+    .testimonial-author {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+    }
+
+    .testimonial-stars {
+      font-size: 0.875rem;
+      color: var(--accent-warning);
+      letter-spacing: 2px;
+      margin-bottom: var(--space-sm);
+    }
+
+    /* ── CTA Section ── */
+    .cta-section {
+      padding: var(--space-3xl) 0;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-glow {
+      position: absolute;
+      width: 600px;
+      height: 400px;
+      background: radial-gradient(ellipse, rgba(0, 212, 255, 0.08), transparent 70%);
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+
+    .cta-box {
+      background: var(--bg-glass);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-xl);
+      padding: var(--space-3xl);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-box::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(0, 212, 255, 0.04), rgba(123, 97, 255, 0.04));
+      pointer-events: none;
+    }
+
+    /* ── Footer ── */
+    footer {
+      padding: var(--space-2xl) 0;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .footer-inner {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: var(--space-2xl);
+      margin-bottom: var(--space-2xl);
+    }
+
+    .footer-brand p {
+      font-size: 0.9375rem;
+      color: var(--text-muted);
+      margin-top: var(--space-md);
+      max-width: 280px;
+    }
+
+    .footer-col-title {
+      font-family: var(--font-display);
+      font-size: 0.875rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--text-primary);
+      margin-bottom: var(--space-lg);
+    }
+
+    .footer-links { list-style: none; }
+    .footer-links li { margin-bottom: var(--space-sm); }
+    .footer-links a {
+      font-size: 0.9375rem;
+      color: var(--text-muted);
+      transition: var(--transition-fast);
+    }
+    .footer-links a:hover { color: var(--accent-primary); }
+
+    .footer-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: var(--space-xl);
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .footer-bottom p {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+    }
+
+    .social-links {
+      display: flex;
+      gap: var(--space-md);
+    }
+
+    .social-link {
+      width: 36px; height: 36px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-glass);
+      border: 1px solid var(--border-glass);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      transition: var(--transition-fast);
+    }
+
+    .social-link:hover {
+      background: var(--bg-glass-mid);
+      border-color: var(--border-accent);
+      transform: translateY(-2px);
+    }
+
+    /* Marquee */
+    .marquee-wrapper {
+      overflow: hidden;
+      padding: var(--space-xl) 0;
+      border-top: 1px solid var(--border-subtle);
+      border-bottom: 1px solid var(--border-subtle);
+      background: var(--bg-glass);
+    }
+
+    .marquee-track {
+      display: flex;
+      gap: var(--space-2xl);
+      animation: marquee 25s linear infinite;
+      white-space: nowrap;
+    }
+
+    .marquee-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      font-family: var(--font-display);
+      font-size: 0.875rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .marquee-dot {
+      width: 6px; height: 6px;
+      background: var(--accent-primary);
+      border-radius: 50%;
+    }
+
+    @keyframes marquee {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+
+    /* ── Mobile Nav ── */
+    .mobile-nav-btn {
+      display: none;
+      background: var(--bg-glass);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-md);
+      padding: 8px 12px;
+      color: var(--text-primary);
+      font-size: 1.25rem;
+      cursor: pointer;
+      transition: var(--transition-fast);
+    }
+
+    #mobileMenu {
+      display: none;
+      flex-direction: column;
+      gap: var(--space-md);
+      padding: var(--space-lg);
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border-subtle);
+      backdrop-filter: blur(40px);
+    }
+
+    #mobileMenu a {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      padding: var(--space-sm) 0;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    @media (max-width: 768px) {
+      .mobile-nav-btn { display: flex; align-items: center; }
+      .hero-stats { flex-wrap: wrap; gap: var(--space-lg); }
+      .features-grid { grid-template-columns: 1fr; }
+      .user-types-grid { grid-template-columns: repeat(2, 1fr); }
+      .gamification-showcase { grid-template-columns: 1fr; }
+      .testimonials-grid { grid-template-columns: 1fr; }
+      .footer-inner { grid-template-columns: 1fr 1fr; }
+      .preview-inner { grid-template-columns: 1fr; }
+      .preview-top-cards { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Navigation ── -->
+  <nav class="nav" role="navigation" aria-label="Main navigation">
+    <div class="nav-container">
+      <a href="index.html" class="nav-logo">NEXUS</a>
+
+      <ul class="nav-links" role="list">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#for-you">Who It's For</a></li>
+        <li><a href="#gamification">Gamification</a></li>
+        <li><a href="#testimonials">Stories</a></li>
+        <li><a href="dashboard.html">Dashboard</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
+        <a href="login.html" class="btn btn-ghost btn-sm">Log in</a>
+        <a href="signup.html" class="btn btn-primary btn-sm">Start Free</a>
+        <button class="mobile-nav-btn" id="mobileMenuBtn" aria-label="Open menu">☰</button>
+      </div>
+    </div>
+
+    <!-- Mobile Menu -->
+    <div id="mobileMenu" role="menu">
+      <a href="#features">Features</a>
+      <a href="#for-you">Who It's For</a>
+      <a href="login.html">Log in</a>
+      <a href="signup.html" class="btn btn-primary">Start Free</a>
+    </div>
+  </nav>
+
+  <!-- ── Hero ── -->
+  <section class="hero" aria-labelledby="heroHeadline">
+    <div class="hero-bg"></div>
+    <div class="hero-grid"></div>
+    <div class="orb hero-orb-1"></div>
+    <div class="orb hero-orb-2"></div>
+
+    <div class="hero-content">
+      <div class="hero-badge">
+        <div class="hero-badge-dot">⚡</div>
+        <span>AI-Powered Life Operating System — 2025</span>
+      </div>
+
+      <h1 class="hero-headline" id="heroHeadline">
+        The Last <span class="highlight">Productivity</span><br/>
+        App You'll Ever Need
+      </h1>
+
+      <p class="hero-subhead">
+        NEXUS combines an AI coach, habit tracker, focus timer, mood tracker, and life planner
+        into one unforgettable system. Built for students, professionals, and dreamers.
+      </p>
+
+      <div class="hero-cta">
+        <a href="signup.html" class="btn btn-primary btn-lg">
+          <span>Begin Your Journey</span>
+          <span>→</span>
+        </a>
+        <a href="dashboard.html" class="btn btn-glass btn-lg">
+          <span>▶</span>
+          <span>See Dashboard</span>
+        </a>
+      </div>
+
+      <div class="hero-stats" data-stats>
+        <div style="text-align:center">
+          <div class="hero-stat-value" data-count="2400000" data-suffix="+">0</div>
+          <div class="hero-stat-label">Active Users</div>
+        </div>
+        <div style="width:1px;height:40px;background:var(--border-subtle)"></div>
+        <div style="text-align:center">
+          <div class="hero-stat-value" data-count="98" data-suffix="%">0</div>
+          <div class="hero-stat-label">Goal Completion Rate</div>
+        </div>
+        <div style="width:1px;height:40px;background:var(--border-subtle)"></div>
+        <div style="text-align:center">
+          <div class="hero-stat-value" data-count="47" data-suffix=" days">0</div>
+          <div class="hero-stat-label">Avg. Streak Length</div>
+        </div>
+        <div style="width:1px;height:40px;background:var(--border-subtle)"></div>
+        <div style="text-align:center">
+          <div class="hero-stat-value" data-count="4.9" data-suffix="★">0</div>
+          <div class="hero-stat-label">App Store Rating</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Marquee ── -->
+  <div class="marquee-wrapper" aria-hidden="true">
+    <div class="marquee-track">
+      <!-- Duplicated for seamless loop -->
+      <span class="marquee-item"><span class="marquee-dot"></span> Habit Tracking</span>
+      <span class="marquee-item"><span class="marquee-dot"></span> AI Coaching</span>
+      <span class="marquee-item"><span class="marquee-dot"></span> Focus Timer</span>
+      <span class="marquee-item"><span class="marquee-dot"></span> Mood Analytics</span>
+      <span class="marquee-item"><span class="marquee-dot"></span> XP & Levels</span>
+      <span class="marquee-item"><span class="marquee-dot"></span> Sleep Tracking</span>
+      <span class="marquee-item"><span class="marquee-dot"></span> Deep Work</span>
+      <span class="marquee-item"><span class="marquee-dot"></span> Smart Goals</span>
+      <span class="marquee-item"><span class="marquee-dot"></span> Life Heatmap</span>
+      <span class="marquee-item"><span class="marquee-dot"></span> AI Timetable</span>
+      <!-- Duplicate for loop -->
+      <span class="marquee-item"><span class="marquee-dot"></span> Habit Tracking</span>
+      <span class="marquee-item"><span class="marquee-dot"></span> AI Coaching</span>
+      <span class="marquee-item"><span class="marquee-dot"></span> Focus Timer</span>
+      <span class="marquee-item"><span class="marquee-dot"></span> Mood Analytics</span>
+      <span class="marquee-item"><span class="marquee-dot"></span> XP & Levels</span>
+      <span class="marquee-item"><span class="marquee-dot"></span> Sleep Tracking</span>
+      <span class="marquee-item"><span class="marquee-dot"></span> Deep Work</span>
+      <span class="marquee-item"><span class="marquee-dot"></span> Smart Goals</span>
+      <span class="marquee-item"><span class="marquee-dot"></span> Life Heatmap</span>
+      <span class="marquee-item"><span class="marquee-dot"></span> AI Timetable</span>
+    </div>
+  </div>
+
+  <!-- ── Dashboard Preview ── -->
+  <section class="preview-section" aria-label="Dashboard preview">
+    <div class="container">
+      <div style="text-align:center;margin-bottom:var(--space-2xl)" data-animate>
+        <span class="section-label">Live Preview</span>
+        <h2 class="section-title">Your Command Center</h2>
+        <p class="section-desc" style="margin:0 auto">Everything you need in one glance. NEXUS gives you a real-time view of your life, goals, and progress.</p>
+      </div>
+
+      <div class="preview-frame" data-animate>
+        <div class="preview-titlebar">
+          <div class="preview-dot" style="background:#ff5f56"></div>
+          <div class="preview-dot" style="background:#ffbd2e"></div>
+          <div class="preview-dot" style="background:#27c93f"></div>
+          <div style="flex:1;height:24px;background:var(--bg-glass);border-radius:var(--radius-sm);margin-left:var(--space-sm)"></div>
+        </div>
+
+        <div class="preview-inner">
+          <!-- Sidebar -->
+          <div class="preview-sidebar">
+            <div style="font-family:var(--font-display);font-size:1rem;font-weight:800;background:var(--grad-primary);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:var(--space-lg)">NEXUS</div>
+            <div class="preview-nav-item active">📊 Dashboard</div>
+            <div class="preview-nav-item">🎯 Goals</div>
+            <div class="preview-nav-item">⏱ Focus</div>
+            <div class="preview-nav-item">📅 Habits</div>
+            <div class="preview-nav-item">😊 Mood</div>
+            <div class="preview-nav-item">📈 Analytics</div>
+            <div class="preview-nav-item">🤖 AI Coach</div>
+          </div>
+
+          <!-- Main Preview -->
+          <div class="preview-main">
+            <div class="preview-top-cards">
+              <div class="preview-mini-card">
+                <div class="preview-mini-val">14</div>
+                <div class="preview-mini-label">🔥 Day Streak</div>
+                <div class="preview-bar"><div class="preview-bar-fill" style="width:70%"></div></div>
+              </div>
+              <div class="preview-mini-card">
+                <div class="preview-mini-val">2,840</div>
+                <div class="preview-mini-label">⚡ Total XP</div>
+                <div class="preview-bar"><div class="preview-bar-fill" style="width:56%;background:linear-gradient(90deg,#7b61ff,#ff6b6b)"></div></div>
+              </div>
+              <div class="preview-mini-card">
+                <div class="preview-mini-val">6h 30m</div>
+                <div class="preview-mini-label">⏱ Focus Today</div>
+                <div class="preview-bar"><div class="preview-bar-fill" style="width:82%;background:linear-gradient(90deg,#00e5a0,#00d4ff)"></div></div>
+              </div>
+              <div class="preview-mini-card">
+                <div class="preview-mini-val">92%</div>
+                <div class="preview-mini-label">✅ Habits Done</div>
+                <div class="preview-bar"><div class="preview-bar-fill" style="width:92%;background:linear-gradient(90deg,#ffd93d,#ff6b6b)"></div></div>
+              </div>
+            </div>
+
+            <div class="preview-charts">
+              <div class="preview-chart-card">
+                <div class="preview-chart-label">📈 Focus Hours — This Week</div>
+                <div class="mini-bars">
+                  <div class="mini-bar" style="height:30%"></div>
+                  <div class="mini-bar" style="height:55%"></div>
+                  <div class="mini-bar" style="height:70%"></div>
+                  <div class="mini-bar" style="height:45%"></div>
+                  <div class="mini-bar" style="height:90%"></div>
+                  <div class="mini-bar" style="height:75%"></div>
+                  <div class="mini-bar" style="height:100%;background:var(--accent-primary)"></div>
+                </div>
+              </div>
+              <div class="preview-chart-card">
+                <div class="preview-chart-label">😊 Mood vs Productivity</div>
+                <div class="mini-bars">
+                  <div class="mini-bar" style="height:60%;background:rgba(123,97,255,0.5)"></div>
+                  <div class="mini-bar" style="height:80%;background:rgba(123,97,255,0.5)"></div>
+                  <div class="mini-bar" style="height:50%;background:rgba(123,97,255,0.5)"></div>
+                  <div class="mini-bar" style="height:90%;background:rgba(123,97,255,0.8)"></div>
+                  <div class="mini-bar" style="height:75%;background:rgba(123,97,255,0.5)"></div>
+                  <div class="mini-bar" style="height:95%;background:rgba(123,97,255,0.8)"></div>
+                  <div class="mini-bar" style="height:100%;background:#7b61ff"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Features ── -->
+  <section class="features-section" id="features" aria-labelledby="featuresTitle">
+    <div class="container">
+      <div data-animate>
+        <span class="section-label">Core Features</span>
+        <h2 class="section-title" id="featuresTitle">
+          Built for Obsessives.<br/>Designed for Everyone.
+        </h2>
+        <p class="section-desc">
+          Every feature is crafted with intention. From AI timetable generation to burnout detection,
+          NEXUS works harder than you so you can work smarter.
+        </p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card" data-animate>
+          <div class="feature-icon feature-icon-1">🤖</div>
+          <h3 class="feature-title">AI Life Coach</h3>
+          <p class="feature-desc">Your personal AI that learns your patterns, predicts slumps, and gives you exactly the nudge you need, when you need it.</p>
+        </div>
+
+        <div class="feature-card" data-animate>
+          <div class="feature-icon feature-icon-2">⚡</div>
+          <h3 class="feature-title">XP & Level System</h3>
+          <p class="feature-desc">Turn every task into a mission. Earn XP, level up your skills, unlock achievements, and compete on leaderboards.</p>
+        </div>
+
+        <div class="feature-card" data-animate>
+          <div class="feature-icon feature-icon-3">🎯</div>
+          <h3 class="feature-title">Smart Habit Engine</h3>
+          <p class="feature-desc">Build unstoppable habits with spaced repetition, streak tracking, and AI that adjusts difficulty to keep you in flow state.</p>
+        </div>
+
+        <div class="feature-card" data-animate>
+          <div class="feature-icon feature-icon-4">🧠</div>
+          <h3 class="feature-title">Deep Focus Mode</h3>
+          <p class="feature-desc">Intelligent Pomodoro sessions with ambient music, distraction blocking, and focus analytics that reveal your peak hours.</p>
+        </div>
+
+        <div class="feature-card" data-animate>
+          <div class="feature-icon feature-icon-5">😊</div>
+          <h3 class="feature-title">Emotional Intelligence</h3>
+          <p class="feature-desc">Track mood, stress, and mental energy. AI detects burnout 7 days early and suggests recovery before it hits.</p>
+        </div>
+
+        <div class="feature-card" data-animate>
+          <div class="feature-icon feature-icon-6">📊</div>
+          <h3 class="feature-title">Life Analytics</h3>
+          <p class="feature-desc">Heatmaps, correlation charts, and weekly AI reports reveal hidden patterns in your productivity, mood, and energy.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── User Types ── -->
+  <section class="user-types-section" id="for-you" aria-labelledby="userTypesTitle">
+    <div class="container">
+      <div style="text-align:center;margin-bottom:var(--space-2xl)" data-animate>
+        <span class="section-label">For Every Dreamer</span>
+        <h2 class="section-title" id="userTypesTitle">Built for <em style="font-style:normal;background:var(--grad-primary);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Your Life</em></h2>
+        <p class="section-desc" style="margin:0 auto">Separate dashboards, AI models, and features for every type of user. NEXUS adapts to you.</p>
+      </div>
+
+      <div class="user-types-grid">
+        <div class="user-type-card" data-animate onclick="window.location.href='signup.html'">
+          <span class="user-type-emoji">📚</span>
+          <div class="user-type-name">JEE / NEET Aspirant</div>
+          <div class="user-type-desc">Subject tracking, PYQ analytics, rank prediction</div>
+        </div>
+        <div class="user-type-card" data-animate onclick="window.location.href='signup.html'">
+          <span class="user-type-emoji">🎓</span>
+          <div class="user-type-name">College Student</div>
+          <div class="user-type-desc">Attendance, assignment tracking, exam prep</div>
+        </div>
+        <div class="user-type-card" data-animate onclick="window.location.href='signup.html'">
+          <span class="user-type-emoji">💼</span>
+          <div class="user-type-name">Working Professional</div>
+          <div class="user-type-desc">Deep work, burnout detection, career goals</div>
+        </div>
+        <div class="user-type-card" data-animate onclick="window.location.href='signup.html'">
+          <span class="user-type-emoji">🚀</span>
+          <div class="user-type-name">Entrepreneur</div>
+          <div class="user-type-desc">Business KPIs, vision boards, team accountability</div>
+        </div>
+        <div class="user-type-card" data-animate onclick="window.location.href='signup.html'">
+          <span class="user-type-emoji">🏋️</span>
+          <div class="user-type-name">Fitness Focused</div>
+          <div class="user-type-desc">Workout tracking, nutrition, body metrics</div>
+        </div>
+        <div class="user-type-card" data-animate onclick="window.location.href='signup.html'">
+          <span class="user-type-emoji">🎥</span>
+          <div class="user-type-name">Content Creator</div>
+          <div class="user-type-desc">Content calendar, growth tracking, brand goals</div>
+        </div>
+        <div class="user-type-card" data-animate onclick="window.location.href='signup.html'">
+          <span class="user-type-emoji">📜</span>
+          <div class="user-type-name">UPSC Aspirant</div>
+          <div class="user-type-desc">Syllabus heatmap, current affairs, answer writing</div>
+        </div>
+        <div class="user-type-card" data-animate onclick="window.location.href='signup.html'">
+          <span class="user-type-emoji">🌱</span>
+          <div class="user-type-name">Self-Improver</div>
+          <div class="user-type-desc">Reading, journaling, mindfulness, life goals</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Gamification ── -->
+  <section class="gamification-section" id="gamification" aria-labelledby="gamTitle">
+    <div class="container">
+      <div class="gamification-showcase">
+        <div data-animate>
+          <span class="section-label">Gamification</span>
+          <h2 class="section-title" id="gamTitle">Life Is a<br/><span class="text-gradient">Game Worth</span><br/>Winning</h2>
+          <p class="section-desc">
+            We've redesigned discipline as the most addictive game you'll ever play.
+            XP, streaks, boss battles, skill trees, and a global leaderboard await.
+          </p>
+
+          <div style="display:flex;flex-direction:column;gap:var(--space-md);margin-top:var(--space-xl)">
+            <div style="display:flex;align-items:center;gap:var(--space-md)">
+              <div style="width:40px;height:40px;border-radius:var(--radius-md);background:rgba(0,212,255,0.1);display:flex;align-items:center;justify-content:center;font-size:1.25rem">⚡</div>
+              <div>
+                <div style="font-weight:600;font-size:0.9375rem">XP & Level System</div>
+                <div style="font-size:0.8125rem;color:var(--text-muted)">10 levels, 100+ skills, infinite growth</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:var(--space-md)">
+              <div style="width:40px;height:40px;border-radius:var(--radius-md);background:rgba(255,217,61,0.1);display:flex;align-items:center;justify-content:center;font-size:1.25rem">🔥</div>
+              <div>
+                <div style="font-weight:600;font-size:0.9375rem">Streak Chains</div>
+                <div style="font-size:0.8125rem;color:var(--text-muted)">Daily streaks with multipliers and shields</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:var(--space-md)">
+              <div style="width:40px;height:40px;border-radius:var(--radius-md);background:rgba(123,97,255,0.1);display:flex;align-items:center;justify-content:center;font-size:1.25rem">🏆</div>
+              <div>
+                <div style="font-weight:600;font-size:0.9375rem">Boss Battles</div>
+                <div style="font-size:0.8125rem;color:var(--text-muted)">Weekly challenges against your past self</div>
+              </div>
+            </div>
+          </div>
+
+          <a href="signup.html" class="btn btn-primary" style="margin-top:var(--space-xl)">Start Your Quest →</a>
+        </div>
+
+        <div data-animate>
+          <div class="level-card">
+            <div class="level-header">
+              <div class="level-badge">42</div>
+              <div>
+                <div style="font-family:var(--font-display);font-weight:700">Level 7 — Seeker</div>
+                <div style="font-size:0.8125rem;color:var(--text-muted)">2,840 / 3,500 XP to next level</div>
+              </div>
+            </div>
+
+            <div class="progress-bar" style="margin-bottom:var(--space-xl)">
+              <div class="progress-bar-fill" style="width:81%"></div>
+            </div>
+
+            <div style="font-size:0.8125rem;font-weight:600;color:var(--text-muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:var(--space-md)">Achievements</div>
+
+            <div class="achievements-grid">
+              <div class="achievement" title="7 Day Streak">🔥</div>
+              <div class="achievement" title="First Focus Session">⚡</div>
+              <div class="achievement" title="10 Habits Completed">✅</div>
+              <div class="achievement" title="Night Owl">🦉</div>
+              <div class="achievement" title="Early Bird">🌅</div>
+              <div class="achievement" title="Deep Worker">🧠</div>
+              <div class="achievement locked" title="Locked">🏆</div>
+              <div class="achievement locked" title="Locked">💎</div>
+            </div>
+
+            <div style="margin-top:var(--space-lg)">
+              <div style="display:flex;justify-content:space-between;font-size:0.8125rem;margin-bottom:var(--space-sm)">
+                <span style="color:var(--text-muted)">Focus</span>
+                <span style="color:var(--accent-primary)">Level 5</span>
+              </div>
+              <div class="progress-bar"><div class="progress-bar-fill" style="width:65%"></div></div>
+            </div>
+            <div style="margin-top:var(--space-md)">
+              <div style="display:flex;justify-content:space-between;font-size:0.8125rem;margin-bottom:var(--space-sm)">
+                <span style="color:var(--text-muted)">Discipline</span>
+                <span style="color:var(--accent-secondary)">Level 8</span>
+              </div>
+              <div class="progress-bar"><div class="progress-bar-fill" style="width:82%;background:linear-gradient(90deg,#7b61ff,#ff6b6b)"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Testimonials ── -->
+  <section class="testimonials-section" id="testimonials" aria-labelledby="testimonialTitle">
+    <div class="container">
+      <div style="text-align:center;margin-bottom:var(--space-2xl)" data-animate>
+        <span class="section-label">Real Stories</span>
+        <h2 class="section-title" id="testimonialTitle">They Changed.<br/>You Can Too.</h2>
+      </div>
+
+      <div class="testimonials-grid">
+        <div class="testimonial-card" data-animate>
+          <div class="testimonial-stars">★★★★★</div>
+          <p class="testimonial-text">
+            NEXUS predicted my burnout 8 days before I felt it. The AI suggested a recovery week
+            and I came back stronger than ever. This isn't a productivity app — it's a life system.
+          </p>
+          <div class="testimonial-author">
+            <div class="avatar avatar-md">AK</div>
+            <div>
+              <div style="font-weight:600;font-size:0.9375rem">Arjun Kumar</div>
+              <div style="font-size:0.8125rem;color:var(--text-muted)">JEE Advanced — AIR 247</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="testimonial-card" data-animate>
+          <div class="testimonial-stars">★★★★★</div>
+          <p class="testimonial-text">
+            I went from working 60-hour weeks burning out to 40 focused hours with 2x output.
+            The Deep Work analytics showed me exactly when I'm most productive. Game changer.
+          </p>
+          <div class="testimonial-author">
+            <div class="avatar avatar-md">PR</div>
+            <div>
+              <div style="font-weight:600;font-size:0.9375rem">Priya Raghavan</div>
+              <div style="font-size:0.8125rem;color:var(--text-muted)">Senior PM at Razorpay</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="testimonial-card" data-animate>
+          <div class="testimonial-stars">★★★★★</div>
+          <p class="testimonial-text">
+            The streak system broke my procrastination addiction. 127-day streak. I've read
+            24 books, built 3 new habits, and launched my YouTube channel — all in 4 months.
+          </p>
+          <div class="testimonial-author">
+            <div class="avatar avatar-md">VS</div>
+            <div>
+              <div style="font-weight:600;font-size:0.9375rem">Varun Sharma</div>
+              <div style="font-size:0.8125rem;color:var(--text-muted)">Content Creator — 180K followers</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── CTA ── -->
+  <section class="cta-section">
+    <div class="container">
+      <div class="cta-box" data-animate>
+        <div class="cta-glow"></div>
+        <div style="position:relative;z-index:1">
+          <div style="font-size:3rem;margin-bottom:var(--space-md)">🚀</div>
+          <h2 class="section-title">Your Best Self<br/><span class="text-gradient">Starts Today</span></h2>
+          <p class="section-desc" style="margin:var(--space-lg) auto var(--space-2xl)">
+            Join 2.4 million people who've transformed their habits, mindset, and results.
+            Free to start. Powerful enough for a lifetime.
+          </p>
+          <div style="display:flex;align-items:center;justify-content:center;gap:var(--space-md);flex-wrap:wrap">
+            <a href="signup.html" class="btn btn-primary btn-lg">Create Free Account →</a>
+            <a href="login.html" class="btn btn-glass btn-lg">Already a member? Log in</a>
+          </div>
+          <div style="margin-top:var(--space-xl);font-size:0.8125rem;color:var(--text-muted)">
+            No credit card required · Free forever plan · Cancel anytime
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Footer ── -->
+  <footer>
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <a href="index.html" class="nav-logo">NEXUS</a>
+          <p>The world's most intelligent personal growth platform. Turn ambition into achievement.</p>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Product</div>
+          <ul class="footer-links">
+            <li><a href="#">Features</a></li>
+            <li><a href="#">Pricing</a></li>
+            <li><a href="#">Changelog</a></li>
+            <li><a href="#">Roadmap</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Company</div>
+          <ul class="footer-links">
+            <li><a href="#">About</a></li>
+            <li><a href="#">Blog</a></li>
+            <li><a href="#">Careers</a></li>
+            <li><a href="#">Press</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Legal</div>
+          <ul class="footer-links">
+            <li><a href="#">Privacy</a></li>
+            <li><a href="#">Terms</a></li>
+            <li><a href="#">Security</a></li>
+            <li><a href="#">Cookies</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>© 2025 NEXUS Inc. All rights reserved.</p>
+        <div class="social-links">
+          <a href="#" class="social-link" aria-label="Twitter">𝕏</a>
+          <a href="#" class="social-link" aria-label="Instagram">📷</a>
+          <a href="#" class="social-link" aria-label="LinkedIn">in</a>
+          <a href="#" class="social-link" aria-label="Discord">💬</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
