@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Habits — NEXUS</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    body { background: var(--bg-void); }
+
+    .layout { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+
+    /* ── Sidebar (reused) ── */
+    .dash-sidebar {
+      background: var(--bg-panel); backdrop-filter: blur(40px);
+      border-right: 1px solid var(--border-subtle);
+      height: 100vh; position: sticky; top: 0;
+      display: flex; flex-direction: column;
+      padding: var(--space-lg) 0; overflow-y: auto; z-index: 200;
+    }
+    .sb-logo { padding: 0 var(--space-lg) var(--space-xl); font-family: var(--font-display); font-size: 1.375rem; font-weight: 800; background: var(--grad-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .sb-section-label { font-size: 0.625rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); padding: 0 var(--space-lg); margin: var(--space-lg) 0 var(--space-sm); }
+    .sb-item { display: flex; align-items: center; gap: 10px; padding: 9px var(--space-lg); font-size: 0.875rem; font-weight: 500; color: var(--text-secondary); cursor: pointer; transition: all 0.2s; text-decoration: none; margin: 1px var(--space-sm); border-radius: var(--radius-md); position: relative; }
+    .sb-item:hover { background: var(--bg-glass); color: var(--text-primary); }
+    .sb-item.active { background: linear-gradient(90deg,rgba(0,212,255,0.1),rgba(123,97,255,0.05)); color: var(--accent-primary); border: 1px solid rgba(0,212,255,0.12); }
+    .sb-item.active::before { content:''; position: absolute; left:0; top:20%; bottom:20%; width:3px; background: var(--accent-primary); border-radius: 0 999px 999px 0; }
+    .sb-icon { font-size: 1rem; width: 20px; text-align: center; flex-shrink: 0; }
+    .sb-xp-card { margin: var(--space-lg) var(--space-sm) 0; padding: var(--space-md); background: linear-gradient(135deg,rgba(0,212,255,0.08),rgba(123,97,255,0.08)); border: 1px solid rgba(0,212,255,0.12); border-radius: var(--radius-lg); }
+    .sb-xp-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-sm); }
+    .sb-level { font-family: var(--font-display); font-size: 0.75rem; font-weight: 800; color: var(--accent-primary); }
+    .sb-xp-num { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--text-muted); }
+
+    /* ── Main ── */
+    .main { display: flex; flex-direction: column; min-height: 100vh; }
+
+    .topbar {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(2,4,8,0.88); backdrop-filter: blur(40px);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 14px var(--space-xl);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    [data-theme="light"] .topbar { background: rgba(240,244,248,0.92); }
+    .topbar-title { font-family: var(--font-display); font-size: 1.25rem; font-weight: 800; }
+    .topbar-right { display: flex; align-items: center; gap: var(--space-md); }
+
+    .body { padding: var(--space-xl); display: flex; flex-direction: column; gap: var(--space-xl); }
+
+    /* ── Stats Row ── */
+    .stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: var(--space-md); }
+    .stat-card {
+      padding: var(--space-lg); border-radius: var(--radius-lg);
+      background: var(--bg-glass); border: 1px solid var(--border-glass);
+      position: relative; overflow: hidden; transition: all 0.3s;
+    }
+    .stat-card:hover { border-color: var(--border-accent); transform: translateY(-3px); }
+    .stat-card-icon { font-size: 1.75rem; margin-bottom: var(--space-sm); }
+    .stat-card-val { font-family: var(--font-display); font-size: 2rem; font-weight: 800; letter-spacing: -0.04em; }
+    .stat-card-label { font-size: 0.8125rem; color: var(--text-muted); margin-top: 4px; }
+
+    /* ── Category Tabs ── */
+    .cat-tabs { display: flex; gap: var(--space-sm); flex-wrap: wrap; }
+    .cat-tab {
+      padding: 8px 18px; border-radius: 999px;
+      background: var(--bg-glass); border: 1px solid var(--border-glass);
+      font-size: 0.875rem; font-weight: 600; color: var(--text-secondary);
+      cursor: pointer; transition: all 0.2s;
+    }
+    .cat-tab:hover { background: var(--bg-glass-mid); color: var(--text-primary); }
+    .cat-tab.active { background: var(--grad-primary); color: #000; border-color: transparent; }
+
+    /* ── Main Grid ── */
+    .habits-grid { display: grid; grid-template-columns: 1fr 360px; gap: var(--space-xl); }
+
+    /* ── Panel ── */
+    .panel { background: var(--bg-glass); border: 1px solid var(--border-glass); border-radius: var(--radius-xl); padding: var(--space-xl); }
+    .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-xl); }
+    .panel-title { font-family: var(--font-display); font-size: 1rem; font-weight: 700; }
+
+    /* ── Habit Cards ── */
+    .habit-cards { display: flex; flex-direction: column; gap: var(--space-md); }
+
+    .habit-card {
+      background: var(--bg-glass);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: var(--space-lg);
+      transition: all 0.25s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .habit-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      border-radius: 0 3px 3px 0;
+      background: var(--grad-primary);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .habit-card:hover { border-color: var(--border-glass); background: var(--bg-glass-mid); transform: translateX(4px); }
+    .habit-card:hover::before { opacity: 1; }
+    .habit-card.completed { border-color: rgba(0,229,160,0.2); }
+    .habit-card.completed::before { opacity: 1; background: var(--accent-success); }
+
+    .habit-card-top {
+      display: flex; align-items: center; gap: var(--space-md);
+      margin-bottom: var(--space-md);
+    }
+
+    .hc-check {
+      width: 28px; height: 28px; border-radius: 50%;
+      border: 2px solid var(--border-glass);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.25s; flex-shrink: 0;
+      font-size: 0.875rem;
+    }
+    .hc-check:hover { border-color: var(--accent-success); background: rgba(0,229,160,0.08); }
+    .habit-card.completed .hc-check { background: var(--accent-success); border-color: var(--accent-success); color: #000; }
+
+    .hc-icon {
+      width: 44px; height: 44px; border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.375rem; flex-shrink: 0;
+    }
+
+    .hc-info { flex: 1; min-width: 0; }
+    .hc-name { font-size: 1rem; font-weight: 700; margin-bottom: 2px; }
+    .habit-card.completed .hc-name { text-decoration: line-through; color: var(--text-muted); }
+    .hc-desc { font-size: 0.8125rem; color: var(--text-muted); }
+
+    .hc-xp {
+      font-family: var(--font-mono); font-size: 0.75rem;
+      color: var(--accent-primary); background: rgba(0,212,255,0.08);
+      padding: 4px 10px; border-radius: 999px; flex-shrink: 0;
+    }
+
+    .hc-bottom {
+      display: flex; align-items: center; gap: var(--space-md);
+    }
+
+    .hc-streak {
+      display: flex; align-items: center; gap: 4px;
+      font-size: 0.8125rem; font-weight: 600; color: var(--accent-warning);
+    }
+
+    .hc-progress-wrap { flex: 1; }
+    .hc-progress-label { display: flex; justify-content: space-between; font-size: 0.6875rem; color: var(--text-muted); margin-bottom: 4px; }
+
+    .hc-days {
+      display: flex; gap: 3px; margin-left: auto;
+    }
+
+    .hc-day {
+      width: 18px; height: 18px; border-radius: 4px;
+      background: var(--bg-glass-mid);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.5rem; color: var(--text-muted);
+      font-weight: 700; text-transform: uppercase;
+      transition: all 0.2s;
+    }
+    .hc-day.done { background: var(--accent-success); color: #000; }
+    .hc-day.partial { background: rgba(0,229,160,0.35); color: var(--accent-success); }
+
+    /* ── Add Habit Modal ── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(2,4,8,0.85); backdrop-filter: blur(8px);
+      z-index: 5000; display: none;
+      align-items: center; justify-content: center; padding: var(--space-lg);
+    }
+    .modal-overlay.open { display: flex; animation: fadeIn 0.2s ease; }
+
+    .modal {
+      background: var(--bg-deep); border: 1px solid var(--border-glass);
+      border-radius: var(--radius-xl); padding: var(--space-2xl);
+      max-width: 480px; width: 100%;
+      animation: scaleIn 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    @keyframes scaleIn { from { opacity:0; transform:scale(0.93) translateY(12px); } to { opacity:1; transform:scale(1) translateY(0); } }
+    @keyframes fadeIn  { from { opacity:0; } to { opacity:1; } }
+
+    .modal-title { font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: var(--space-xl); }
+
+    .emoji-picker { display: grid; grid-template-columns: repeat(8,1fr); gap: 4px; }
+    .emoji-opt {
+      aspect-ratio: 1; border-radius: var(--radius-sm);
+      background: var(--bg-glass); border: 1px solid var(--border-subtle);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.25rem; cursor: pointer; transition: all 0.15s;
+    }
+    .emoji-opt:hover { background: var(--bg-glass-mid); transform: scale(1.15); }
+    .emoji-opt.selected { border-color: var(--accent-primary); background: rgba(0,212,255,0.08); }
+
+    .freq-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: var(--space-sm); }
+    .freq-opt {
+      padding: 10px; border-radius: var(--radius-md);
+      background: var(--bg-glass); border: 2px solid var(--border-subtle);
+      text-align: center; cursor: pointer; transition: all 0.2s;
+      font-size: 0.8125rem; font-weight: 600; color: var(--text-secondary);
+    }
+    .freq-opt:hover { border-color: var(--border-glass); color: var(--text-primary); }
+    .freq-opt.selected { border-color: var(--accent-primary); background: rgba(0,212,255,0.06); color: var(--accent-primary); }
+
+    /* ── Right column ── */
+    .right-col { display: flex; flex-direction: column; gap: var(--space-xl); }
+
+    /* ── Weekly Grid ── */
+    .week-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 6px; }
+    .week-day-col { display: flex; flex-direction: column; gap: 4px; align-items: center; }
+    .week-day-label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); font-weight: 700; margin-bottom: 2px; }
+    .week-cell {
+      width: 100%; aspect-ratio: 1; border-radius: 4px;
+      background: var(--bg-glass-mid);
+      cursor: pointer; transition: all 0.15s;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.6rem;
+    }
+    .week-cell:hover { transform: scale(1.15); }
+    .week-cell.done { background: rgba(0,229,160,0.75); }
+    .week-cell.missed { background: rgba(255,77,109,0.3); }
+    .week-cell.today { outline: 2px solid var(--accent-primary); outline-offset: 1px; }
+
+    /* ── Streak milestones ── */
+    .milestone-row { display: flex; gap: var(--space-sm); overflow-x: auto; padding-bottom: 4px; }
+    .milestone {
+      flex-shrink: 0; padding: 10px 14px;
+      border-radius: var(--radius-md); background: var(--bg-glass);
+      border: 1px solid var(--border-subtle);
+      text-align: center; min-width: 72px;
+    }
+    .milestone.reached { border-color: var(--accent-warning); background: rgba(255,217,61,0.06); }
+    .milestone-days { font-family: var(--font-display); font-size: 1.125rem; font-weight: 800; color: var(--accent-warning); }
+    .milestone-label { font-size: 0.625rem; color: var(--text-muted); margin-top: 2px; }
+
+    /* ── Toast ── */
+    .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9000; display: flex; flex-direction: column; gap: 8px; }
+    .toast { background: rgba(8,16,28,0.97); backdrop-filter: blur(40px); border: 1px solid var(--border-glass); border-radius: var(--radius-lg); padding: 14px 18px; display: flex; align-items: center; gap: 12px; min-width: 280px; box-shadow: 0 24px 64px rgba(0,0,0,0.6); animation: slideIn 0.3s ease; }
+    @keyframes slideIn { from { opacity:0; transform:translateX(30px); } to { opacity:1; transform:translateX(0); } }
+
+    /* ── Responsive ── */
+    @media (max-width: 1100px) { .habits-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } .dash-sidebar { display: none; } .stats-row { grid-template-columns: repeat(2,1fr); } }
+    @media (max-width: 500px) { .stats-row { grid-template-columns: repeat(2,1fr); } .body { padding: var(--space-md); } .cat-tabs { gap: 6px; } }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="dash-sidebar">
+    <div class="sb-logo">NEXUS</div>
+    <div class="sb-section-label">Main</div>
+    <a href="dashboard.html" class="sb-item"><span class="sb-icon">📊</span> Dashboard</a>
+    <a href="habits.html"    class="sb-item active"><span class="sb-icon">✅</span> Habits</a>
+    <a href="focus.html"     class="sb-item"><span class="sb-icon">⏱</span> Focus Timer</a>
+    <a href="analytics.html" class="sb-item"><span class="sb-icon">📈</span> Analytics</a>
+    <div class="sb-section-label">Track</div>
+    <a href="#" class="sb-item"><span class="sb-icon">🎯</span> Goals</a>
+    <a href="#" class="sb-item"><span class="sb-icon">😊</span> Mood</a>
+    <a href="#" class="sb-item"><span class="sb-icon">📓</span> Journal</a>
+    <a href="#" class="sb-item"><span class="sb-icon">💤</span> Sleep</a>
+    <div class="sb-section-label">Grow</div>
+    <a href="#" class="sb-item"><span class="sb-icon">🤖</span> AI Coach</a>
+    <a href="#" class="sb-item"><span class="sb-icon">🏆</span> Achievements</a>
+    <div class="sb-section-label">Account</div>
+    <a href="profile.html"  class="sb-item"><span class="sb-icon">👤</span> Profile</a>
+    <a href="settings.html" class="sb-item"><span class="sb-icon">⚙️</span> Settings</a>
+    <div class="sb-xp-card">
+      <div class="sb-xp-top">
+        <span class="sb-level">⚡ Level 7</span>
+        <span class="sb-xp-num" id="sbXP">2840 XP</span>
+      </div>
+      <div class="progress-bar"><div class="progress-bar-fill" id="sbXPBar" style="width:81%"></div></div>
+      <div style="font-size:0.625rem;color:var(--text-muted);margin-top:4px">660 XP to Level 8</div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <header class="topbar">
+      <div style="display:flex;align-items:center;gap:var(--space-md)">
+        <a href="dashboard.html" style="color:var(--text-muted);font-size:1.25rem;text-decoration:none;transition:color 0.2s" onmouseover="this.style.color='var(--text-primary)'" onmouseout="this.style.color='var(--text-muted)'">←</a>
+        <span class="topbar-title">✅ Habit Tracker</span>
+      </div>
+      <div class="topbar-right">
+        <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle theme">🌙</button>
+        <button class="btn btn-primary btn-sm" onclick="openModal()">+ New Habit</button>
+        <div class="avatar avatar-md" style="width:36px;height:36px;border-radius:50%;background:var(--grad-primary);display:flex;align-items:center;justify-content:center;font-weight:800;color:#000;cursor:pointer" onclick="window.location='profile.html'">AK</div>
+      </div>
+    </header>
+
+    <div class="body">
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-card-icon">🔥</div>
+          <div class="stat-card-val" style="color:var(--accent-warning)">14</div>
+          <div class="stat-card-label">Best Streak</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-icon">✅</div>
+          <div class="stat-card-val" style="background:var(--grad-primary);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text" id="completedToday">5/8</div>
+          <div class="stat-card-label">Done Today</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-icon">📅</div>
+          <div class="stat-card-val" style="color:var(--accent-success)">92%</div>
+          <div class="stat-card-label">This Week Rate</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-icon">⚡</div>
+          <div class="stat-card-val" style="color:var(--accent-secondary)" id="totalXPToday">175</div>
+          <div class="stat-card-label">XP Today</div>
+        </div>
+      </div>
+
+      <!-- Category Tabs -->
+      <div class="cat-tabs" id="catTabs">
+        <div class="cat-tab active" onclick="filterCat(this,'all')">All (8)</div>
+        <div class="cat-tab" onclick="filterCat(this,'health')">💪 Health</div>
+        <div class="cat-tab" onclick="filterCat(this,'mind')">🧠 Mind</div>
+        <div class="cat-tab" onclick="filterCat(this,'study')">📚 Study</div>
+        <div class="cat-tab" onclick="filterCat(this,'discipline')">⚡ Discipline</div>
+      </div>
+
+      <!-- Grid -->
+      <div class="habits-grid">
+
+        <!-- Left: Habit Cards -->
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Today's Habits</span>
+            <span style="font-size:0.8125rem;color:var(--text-muted)" id="progressLabel">5 of 8 complete</span>
+          </div>
+
+          <!-- Overall progress -->
+          <div style="margin-bottom:var(--space-xl)">
+            <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:var(--text-muted);margin-bottom:6px">
+              <span>Daily completion</span>
+              <span id="pctLabel" style="color:var(--accent-primary);font-weight:700">62%</span>
+            </div>
+            <div class="progress-bar" style="height:8px">
+              <div class="progress-bar-fill" id="overallBar" style="width:62%"></div>
+            </div>
+          </div>
+
+          <div class="habit-cards" id="habitCards"></div>
+        </div>
+
+        <!-- Right column -->
+        <div class="right-col">
+
+          <!-- Weekly Overview -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">📅 This Week</span>
+              <span style="font-size:0.8125rem;color:var(--accent-success);font-weight:600">92% rate</span>
+            </div>
+            <div class="week-grid" id="weekGrid"></div>
+            <div style="display:flex;gap:var(--space-md);margin-top:var(--space-md);font-size:0.75rem;color:var(--text-muted)">
+              <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:rgba(0,229,160,0.75);border-radius:2px;display:inline-block"></span>Done</span>
+              <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:rgba(255,77,109,0.3);border-radius:2px;display:inline-block"></span>Missed</span>
+              <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:var(--bg-glass-mid);border-radius:2px;display:inline-block"></span>Upcoming</span>
+            </div>
+          </div>
+
+          <!-- Streak Milestones -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">🏆 Streak Milestones</span>
+            </div>
+            <div class="milestone-row">
+              <div class="milestone reached">
+                <div class="milestone-days">7</div>
+                <div class="milestone-label">days ✓</div>
+              </div>
+              <div class="milestone reached">
+                <div class="milestone-days">14</div>
+                <div class="milestone-label">days ✓</div>
+              </div>
+              <div class="milestone">
+                <div class="milestone-days" style="color:var(--text-muted)">21</div>
+                <div class="milestone-label">days</div>
+              </div>
+              <div class="milestone">
+                <div class="milestone-days" style="color:var(--text-muted)">30</div>
+                <div class="milestone-label">days</div>
+              </div>
+              <div class="milestone">
+                <div class="milestone-days" style="color:var(--text-muted)">66</div>
+                <div class="milestone-label">days</div>
+              </div>
+              <div class="milestone">
+                <div class="milestone-days" style="color:var(--text-muted)">100</div>
+                <div class="milestone-label">days</div>
+              </div>
+            </div>
+            <div style="margin-top:var(--space-md)">
+              <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:var(--text-muted);margin-bottom:6px">
+                <span>Next milestone: 21 days</span>
+                <span style="color:var(--accent-primary);font-weight:600">7 days left</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-bar-fill" style="width:66%;background:linear-gradient(90deg,#ffd93d,#ff6b6b)"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- AI Habit Insight -->
+          <div class="panel" style="background:linear-gradient(135deg,rgba(0,212,255,0.05),rgba(123,97,255,0.05));border-color:rgba(0,212,255,0.12)">
+            <div class="panel-header">
+              <span class="panel-title">🤖 AI Insight</span>
+              <span style="font-size:0.6875rem;color:var(--accent-primary);font-family:var(--font-mono)">Live</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:var(--space-md)">
+              <div style="padding:var(--space-md);background:var(--bg-glass);border-radius:var(--radius-md);border:1px solid var(--border-subtle)">
+                <div style="font-size:0.75rem;font-weight:700;color:var(--accent-primary);margin-bottom:4px">💡 Pattern detected</div>
+                <div style="font-size:0.875rem;color:var(--text-secondary);line-height:1.6">You complete <strong style="color:var(--text-primary)">94%</strong> of habits before 10 AM. Schedule your hardest habits in the morning window.</div>
+              </div>
+              <div style="padding:var(--space-md);background:var(--bg-glass);border-radius:var(--radius-md);border:1px solid var(--border-subtle)">
+                <div style="font-size:0.75rem;font-weight:700;color:var(--accent-warning);margin-bottom:4px">⚠️ Risk alert</div>
+                <div style="font-size:0.875rem;color:var(--text-secondary);line-height:1.6">"Sleep by 11 PM" breaks most on <strong style="color:var(--text-primary)">Fridays</strong>. I'll send a reminder at 10 PM this Friday.</div>
+              </div>
+              <div style="padding:var(--space-md);background:var(--bg-glass);border-radius:var(--radius-md);border:1px solid var(--border-subtle)">
+                <div style="font-size:0.75rem;font-weight:700;color:var(--accent-success);margin-bottom:4px">🌟 Recommendation</div>
+                <div style="font-size:0.875rem;color:var(--text-secondary);line-height:1.6">Add a <strong style="color:var(--text-primary)">5-min evening review</strong> habit. Users with this habit have <strong style="color:var(--accent-success)">3x</strong> higher retention.</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Add Habit Modal ── -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <div class="modal-title">✨ New Habit</div>
+
+    <div style="display:flex;flex-direction:column;gap:var(--space-lg)">
+      <div class="input-group">
+        <label class="input-label">Habit name</label>
+        <input type="text" class="input-field" id="newHabitName" placeholder="e.g. Read 20 pages" />
+      </div>
+
+      <div class="input-group">
+        <label class="input-label" style="margin-bottom:8px">Choose icon</label>
+        <div class="emoji-picker" id="emojiPicker">
+          <!-- built by JS -->
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label class="input-label">Category</label>
+        <select class="input-field" id="newHabitCat">
+          <option value="health">💪 Health</option>
+          <option value="mind">🧠 Mind</option>
+          <option value="study">📚 Study</option>
+          <option value="discipline">⚡ Discipline</option>
+        </select>
+      </div>
+
+      <div class="input-group">
+        <label class="input-label" style="margin-bottom:8px">Frequency</label>
+        <div class="freq-grid">
+          <div class="freq-opt selected" onclick="selectFreq(this,'daily')">Daily</div>
+          <div class="freq-opt" onclick="selectFreq(this,'weekdays')">Weekdays</div>
+          <div class="freq-opt" onclick="selectFreq(this,'3x/week')">3×/week</div>
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label class="input-label">XP reward: <span id="xpRewardLabel" style="color:var(--accent-primary)">20 XP</span></label>
+        <input type="range" min="10" max="100" step="5" value="20"
+          oninput="document.getElementById('xpRewardLabel').textContent = this.value + ' XP'" />
+      </div>
+
+      <div style="display:flex;gap:var(--space-md)">
+        <button class="btn btn-ghost" style="flex:1;justify-content:center" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" style="flex:2;justify-content:center" onclick="addHabit()">Add Habit 🚀</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+/* ── Theme ── */
+(function(){
+  try {
+    const t = localStorage.getItem('nexus-theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', t);
+    document.addEventListener('DOMContentLoaded', () => {
+      const btn = document.getElementById('themeToggle');
+      if (btn) btn.textContent = t === 'dark' ? '🌙' : '☀️';
+    });
+  } catch(e){}
+})();
+
+function toggleTheme() {
+  const curr = document.documentElement.getAttribute('data-theme') || 'dark';
+  const next = curr === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  document.getElementById('themeToggle').textContent = next === 'dark' ? '🌙' : '☀️';
+  try { localStorage.setItem('nexus-theme', next); } catch(e){}
+}
+
+/* ── Toast ── */
+function showToast(msg, type) {
+  const icons = { info:'ℹ️', success:'✅', warning:'⚠️', error:'❌', xp:'⚡' };
+  const colors = { info:'var(--accent-primary)', success:'var(--accent-success)', warning:'var(--accent-warning)', error:'var(--accent-danger)', xp:'var(--accent-secondary)' };
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.style.borderLeft = '3px solid ' + (colors[type] || colors.info);
+  t.innerHTML = `<span style="font-size:1.25rem">${icons[type]||'ℹ️'}</span><span style="font-size:0.9375rem;color:var(--text-primary)">${msg}</span>`;
+  c.appendChild(t);
+  setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity 0.3s'; setTimeout(()=>t.remove(),300); }, 3000);
+}
+
+/* ── Habits Data ── */
+let habits = [
+  { id:1, icon:'🏃', name:'Morning Run',        desc:'30-min jog before breakfast', cat:'health',    streak:14, xp:30,  done:true,  days:[1,1,1,1,1,1,0], freq:'Daily' },
+  { id:2, icon:'📚', name:'Read 30 pages',      desc:'Non-fiction or textbook',     cat:'mind',      streak:7,  xp:25,  done:true,  days:[1,1,0,1,1,1,0], freq:'Daily' },
+  { id:3, icon:'🧘', name:'Meditation',         desc:'10 min mindfulness session',  cat:'mind',      streak:14, xp:20,  done:true,  days:[1,1,1,1,1,1,0], freq:'Daily' },
+  { id:4, icon:'💧', name:'Drink 8 glasses',    desc:'Stay hydrated all day',       cat:'health',    streak:10, xp:15,  done:true,  days:[1,1,1,1,0,1,0], freq:'Daily' },
+  { id:5, icon:'📓', name:'Journal entry',      desc:'3 things grateful for',       cat:'mind',      streak:5,  xp:20,  done:true,  days:[0,1,1,0,1,1,0], freq:'Daily' },
+  { id:6, icon:'⏱', name:'2h Deep Work',       desc:'No phone, full focus block',  cat:'discipline',streak:8,  xp:50,  done:false, days:[1,1,1,1,1,0,0], freq:'Daily' },
+  { id:7, icon:'🌙', name:'Sleep by 11 PM',     desc:'Wind-down & phone off',       cat:'health',    streak:3,  xp:25,  done:false, days:[1,1,0,1,0,0,0], freq:'Daily' },
+  { id:8, icon:'💪', name:'Workout',            desc:'Gym or home strength session',cat:'health',    streak:6,  xp:35,  done:false, days:[1,0,1,1,1,0,0], freq:'3×/week' },
+];
+
+let activeCat = 'all';
+let selectedEmoji = '⭐';
+let selectedFreq = 'daily';
+let totalXP = 2840;
+
+function filteredHabits() {
+  return activeCat === 'all' ? habits : habits.filter(h => h.cat === activeCat);
+}
+
+function updateStats() {
+  const done = habits.filter(h => h.done).length;
+  const total = habits.length;
+  const pct = Math.round((done / total) * 100);
+  document.getElementById('completedToday').textContent = done + '/' + total;
+  document.getElementById('progressLabel').textContent = done + ' of ' + total + ' complete';
+  document.getElementById('pctLabel').textContent = pct + '%';
+  document.getElementById('overallBar').style.width = pct + '%';
+  const xpEarned = habits.filter(h=>h.done).reduce((s,h) => s+h.xp, 0);
+  document.getElementById('totalXPToday').textContent = xpEarned;
+}
+
+function renderHabits() {
+  const list = filteredHabits();
+  const days = ['M','T','W','T','F','S','S'];
+  document.getElementById('habitCards').innerHTML = list.map(h => `
+    <div class="habit-card ${h.done ? 'completed' : ''}" id="hcard${h.id}">
+      <div class="habit-card-top">
+        <div class="hc-check" onclick="toggleHabit(${h.id})">${h.done ? '✓' : ''}</div>
+        <div class="hc-icon" style="background:rgba(255,255,255,0.05)">${h.icon}</div>
+        <div class="hc-info">
+          <div class="hc-name">${h.name}</div>
+          <div class="hc-desc">${h.desc}</div>
+        </div>
+        <div class="hc-xp">+${h.xp} XP</div>
+      </div>
+      <div class="hc-bottom">
+        <div class="hc-streak">🔥 ${h.streak} days</div>
+        <div class="hc-days">
+          ${h.days.map((d,i) => `<div class="hc-day ${d===1?'done':''} ${i===6?'today':''}">${days[i]}</div>`).join('')}
+        </div>
+      </div>
+    </div>
+  `).join('');
+  updateStats();
+}
+
+function toggleHabit(id) {
+  const h = habits.find(h => h.id === id);
+  if (!h) return;
+  h.done = !h.done;
+  if (h.done) {
+    h.streak++;
+    h.days[6] = 1;
+    totalXP += h.xp;
+    showToast(`+${h.xp} XP — ${h.name} ✅`, 'xp');
+  } else {
+    h.streak = Math.max(0, h.streak - 1);
+    h.days[6] = 0;
+    totalXP -= h.xp;
+  }
+  renderHabits();
+}
+
+function filterCat(el, cat) {
+  document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  activeCat = cat;
+  renderHabits();
+}
+
+/* ── Weekly Grid ── */
+function renderWeekGrid() {
+  const dayNames = ['M','T','W','T','F','S','S'];
+  const habitSlice = habits.slice(0, 6);
+  let html = '';
+  for (let d = 0; d < 7; d++) {
+    html += `<div class="week-day-col">
+      <div class="week-day-label">${dayNames[d]}</div>
+      ${habitSlice.map(h => {
+        const cls = h.days[d] === 1 ? 'done' : d === 6 ? 'today' : d > 4 ? '' : 'missed';
+        return `<div class="week-cell ${cls}"></div>`;
+      }).join('')}
+    </div>`;
+  }
+  document.getElementById('weekGrid').innerHTML = html;
+}
+
+/* ── Modal ── */
+const emojis = ['🏃','📚','🧘','💧','📓','⏱','🌙','💪','🍎','☕','✍️','🎯','🎸','🌿','💊','🚴','🧹','💼','🌅','🧠'];
+let selectedEmojiEl = null;
+
+function buildEmojiPicker() {
+  document.getElementById('emojiPicker').innerHTML = emojis.map((e,i) => `
+    <div class="emoji-opt ${i===0?'selected':''}" onclick="pickEmoji(this,'${e}')">${e}</div>
+  `).join('');
+  selectedEmoji = emojis[0];
+}
+
+function pickEmoji(el, emoji) {
+  document.querySelectorAll('.emoji-opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedEmoji = emoji;
+}
+
+function selectFreq(el, freq) {
+  document.querySelectorAll('.freq-opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedFreq = freq;
+}
+
+function openModal() {
+  buildEmojiPicker();
+  document.getElementById('modalOverlay').classList.add('open');
+  document.getElementById('newHabitName').focus();
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.getElementById('newHabitName').value = '';
+}
+
+function closeModalOutside(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+}
+
+function addHabit() {
+  const name = document.getElementById('newHabitName').value.trim();
+  if (!name) { showToast('Please enter a habit name', 'warning'); return; }
+  const cat  = document.getElementById('newHabitCat').value;
+  const xp   = parseInt(document.querySelector('input[type="range"]').value);
+  const newH = {
+    id: Date.now(), icon: selectedEmoji, name, desc: 'New habit',
+    cat, streak: 0, xp, done: false,
+    days: [0,0,0,0,0,0,0], freq: selectedFreq
+  };
+  habits.push(newH);
+  closeModal();
+  renderHabits();
+  renderWeekGrid();
+  showToast(`"${name}" added! 🎉 Let's build that streak.`, 'success');
+}
+
+/* ── Init ── */
+renderHabits();
+renderWeekGrid();
+</script>
+</body>
+</html>

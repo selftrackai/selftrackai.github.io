@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analytics — NEXUS</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    body { background: var(--bg-void); }
+    .layout { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+
+    /* Sidebar */
+    .dash-sidebar { background: var(--bg-panel); backdrop-filter: blur(40px); border-right: 1px solid var(--border-subtle); height: 100vh; position: sticky; top: 0; display: flex; flex-direction: column; padding: var(--space-lg) 0; overflow-y: auto; z-index: 200; }
+    .sb-logo { padding: 0 var(--space-lg) var(--space-xl); font-family: var(--font-display); font-size: 1.375rem; font-weight: 800; background: var(--grad-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .sb-section-label { font-size: 0.625rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); padding: 0 var(--space-lg); margin: var(--space-lg) 0 var(--space-sm); }
+    .sb-item { display: flex; align-items: center; gap: 10px; padding: 9px var(--space-lg); font-size: 0.875rem; font-weight: 500; color: var(--text-secondary); cursor: pointer; transition: all 0.2s; text-decoration: none; margin: 1px var(--space-sm); border-radius: var(--radius-md); position: relative; }
+    .sb-item:hover { background: var(--bg-glass); color: var(--text-primary); }
+    .sb-item.active { background: linear-gradient(90deg,rgba(0,212,255,0.1),rgba(123,97,255,0.05)); color: var(--accent-primary); border: 1px solid rgba(0,212,255,0.12); }
+    .sb-item.active::before { content:''; position:absolute; left:0; top:20%; bottom:20%; width:3px; background:var(--accent-primary); border-radius:0 999px 999px 0; }
+    .sb-icon { font-size: 1rem; width: 20px; text-align: center; flex-shrink: 0; }
+    .sb-xp-card { margin: var(--space-lg) var(--space-sm) 0; padding: var(--space-md); background: linear-gradient(135deg,rgba(0,212,255,0.08),rgba(123,97,255,0.08)); border: 1px solid rgba(0,212,255,0.12); border-radius: var(--radius-lg); }
+    .sb-xp-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-sm); }
+    .sb-level { font-family: var(--font-display); font-size: 0.75rem; font-weight: 800; color: var(--accent-primary); }
+    .sb-xp-num { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--text-muted); }
+
+    /* Main */
+    .main { display: flex; flex-direction: column; }
+    .topbar { position: sticky; top: 0; z-index: 100; background: rgba(2,4,8,0.88); backdrop-filter: blur(40px); border-bottom: 1px solid var(--border-subtle); padding: 14px var(--space-xl); display: flex; align-items: center; justify-content: space-between; }
+    [data-theme="light"] .topbar { background: rgba(240,244,248,0.92); }
+    .topbar-title { font-family: var(--font-display); font-size: 1.25rem; font-weight: 800; }
+    .topbar-right { display: flex; align-items: center; gap: var(--space-md); }
+
+    .body { padding: var(--space-xl); display: flex; flex-direction: column; gap: var(--space-xl); }
+
+    /* Panel */
+    .panel { background: var(--bg-glass); border: 1px solid var(--border-glass); border-radius: var(--radius-xl); padding: var(--space-xl); }
+    .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-xl); flex-wrap: wrap; gap: var(--space-md); }
+    .panel-title { font-family: var(--font-display); font-size: 1rem; font-weight: 700; }
+
+    /* ── Period tabs ── */
+    .period-tabs { display: flex; background: var(--bg-glass); border: 1px solid var(--border-subtle); border-radius: 999px; padding: 3px; }
+    .period-tab { padding: 6px 16px; border-radius: 999px; font-size: 0.8125rem; font-weight: 600; cursor: pointer; transition: all 0.2s; color: var(--text-muted); border: none; background: none; }
+    .period-tab.active { background: var(--grad-primary); color: #000; }
+
+    /* ── KPI cards ── */
+    .kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--space-md); }
+    .kpi-card { padding: var(--space-lg); background: var(--bg-glass); border: 1px solid var(--border-glass); border-radius: var(--radius-lg); position: relative; overflow: hidden; transition: all 0.3s; text-align: center; }
+    .kpi-card:hover { border-color: var(--border-accent); transform: translateY(-3px); box-shadow: 0 8px 32px rgba(0,212,255,0.08); }
+    .kpi-icon { font-size: 1.5rem; margin-bottom: 8px; }
+    .kpi-val { font-family: var(--font-display); font-size: 1.75rem; font-weight: 800; letter-spacing: -0.04em; line-height: 1; margin-bottom: 4px; }
+    .kpi-label { font-size: 0.75rem; color: var(--text-muted); }
+    .kpi-delta { font-size: 0.6875rem; font-weight: 700; margin-top: 6px; }
+    .up { color: var(--accent-success); }
+    .down { color: var(--accent-danger); }
+    .flat { color: var(--text-muted); }
+
+    /* ── Chart canvas areas ── */
+    .chart-area { position: relative; width: 100%; }
+
+    /* Bar chart */
+    .bar-chart-tall { display: flex; align-items: flex-end; gap: 8px; height: 160px; padding: 0 4px; }
+    .bc-col { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; }
+    .bc-bar { width: 100%; border-radius: 6px 6px 0 0; cursor: pointer; transition: all 0.3s; position: relative; min-height: 4px; }
+    .bc-bar:hover { filter: brightness(1.2); transform: scaleY(1.02); transform-origin: bottom; }
+    .bc-bar-tip { position: absolute; top: -28px; left: 50%; transform: translateX(-50%); background: var(--bg-glass-high, rgba(255,255,255,0.15)); backdrop-filter: blur(10px); border: 1px solid var(--border-glass); border-radius: var(--radius-sm); padding: 2px 8px; font-size: 0.6875rem; font-weight: 700; white-space: nowrap; opacity: 0; transition: opacity 0.2s; pointer-events: none; color: var(--text-primary); }
+    .bc-bar:hover .bc-bar-tip { opacity: 1; }
+    .bc-label { font-size: 0.625rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* Line chart (SVG) */
+    .line-chart-svg { width: 100%; overflow: visible; }
+
+    /* Scatter plot */
+    .scatter-wrap { position: relative; width: 100%; height: 200px; }
+    .scatter-svg { width: 100%; height: 100%; overflow: visible; }
+
+    /* ── 2-col grid ── */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-xl); }
+    .grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: var(--space-xl); }
+
+    /* ── Heatmap ── */
+    .hm-months { display: flex; justify-content: space-between; font-size: 0.625rem; color: var(--text-muted); margin-bottom: 4px; }
+    .hm-wrap { overflow-x: auto; padding-bottom: 4px; }
+    .hm-inner { display: grid; grid-template-rows: repeat(7,1fr); grid-auto-flow: column; gap: 3px; min-width: 600px; }
+    .hm-cell { width: 11px; height: 11px; border-radius: 2px; background: var(--bg-glass-mid); cursor: pointer; transition: transform 0.15s; }
+    .hm-cell:hover { transform: scale(1.5); }
+    .hm-cell[data-l="1"] { background: rgba(0,212,255,0.18); }
+    .hm-cell[data-l="2"] { background: rgba(0,212,255,0.38); }
+    .hm-cell[data-l="3"] { background: rgba(0,212,255,0.62); }
+    .hm-cell[data-l="4"] { background: rgba(0,212,255,0.88); }
+    .hm-legend { display: flex; align-items: center; gap: 4px; margin-top: var(--space-sm); justify-content: flex-end; }
+    .hm-legend-cell { width: 10px; height: 10px; border-radius: 2px; }
+
+    /* ── Insight cards ── */
+    .insight-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: var(--space-md); }
+    .insight-card { padding: var(--space-lg); background: var(--bg-glass); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); position: relative; overflow: hidden; transition: all 0.25s; }
+    .insight-card:hover { border-color: var(--border-glass); transform: translateY(-3px); }
+    .insight-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+    .insight-card.blue::before { background: var(--accent-primary); }
+    .insight-card.purple::before { background: var(--accent-secondary); }
+    .insight-card.green::before { background: var(--accent-success); }
+    .insight-card.yellow::before { background: var(--accent-warning); }
+    .insight-card.red::before { background: var(--accent-danger); }
+    .insight-tag { font-size: 0.625rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: var(--space-sm); }
+    .insight-text { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6; }
+    .insight-text strong { color: var(--text-primary); }
+
+    /* ── Subject breakdown ── */
+    .subject-row { display: flex; align-items: center; gap: var(--space-md); padding: 10px 0; border-bottom: 1px solid var(--border-subtle); }
+    .subject-row:last-child { border-bottom: none; }
+    .subject-icon { font-size: 1.25rem; width: 32px; text-align: center; flex-shrink: 0; }
+    .subject-name { font-size: 0.875rem; font-weight: 600; min-width: 100px; }
+    .subject-bar-wrap { flex: 1; }
+    .subject-bar { height: 8px; background: var(--bg-glass-mid); border-radius: 999px; overflow: hidden; }
+    .subject-fill { height: 100%; border-radius: 999px; transition: width 1s cubic-bezier(0.4,0,0.2,1); }
+    .subject-hours { font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); min-width: 48px; text-align: right; }
+    .subject-pct { font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent-primary); min-width: 36px; text-align: right; }
+
+    /* ── Donut ── */
+    .donut-wrap { display: flex; align-items: center; gap: var(--space-xl); flex-wrap: wrap; }
+    .donut-svg { flex-shrink: 0; }
+    .donut-legend { display: flex; flex-direction: column; gap: var(--space-sm); }
+    .donut-legend-item { display: flex; align-items: center; gap: var(--space-sm); font-size: 0.875rem; }
+    .donut-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ── Weekly report card ── */
+    .report-card { padding: var(--space-xl); background: linear-gradient(135deg,rgba(0,212,255,0.05),rgba(123,97,255,0.05)); border: 1px solid rgba(0,212,255,0.12); border-radius: var(--radius-xl); }
+    .report-week { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent-primary); margin-bottom: var(--space-md); }
+    .report-score { font-family: var(--font-display); font-size: 4rem; font-weight: 900; letter-spacing: -0.05em; background: var(--grad-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1; margin-bottom: 4px; }
+    .report-grade { font-size: 0.875rem; color: var(--text-muted); margin-bottom: var(--space-xl); }
+    .report-metrics { display: grid; grid-template-columns: repeat(2,1fr); gap: var(--space-md); }
+    .report-metric { display: flex; flex-direction: column; gap: 4px; }
+    .report-metric-label { font-size: 0.75rem; color: var(--text-muted); }
+    .report-metric-val { font-size: 1rem; font-weight: 700; }
+
+    /* ── Correlation plot ── */
+    .corr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-xl); }
+
+    /* Toast */
+    .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9000; display: flex; flex-direction: column; gap: 8px; }
+    .toast { background: rgba(8,16,28,0.97); backdrop-filter: blur(40px); border: 1px solid var(--border-glass); border-radius: var(--radius-lg); padding: 14px 18px; display: flex; align-items: center; gap: 12px; min-width: 280px; box-shadow: 0 24px 64px rgba(0,0,0,0.6); animation: sIn 0.3s ease; }
+    @keyframes sIn { from {opacity:0;transform:translateX(30px)} to {opacity:1;transform:translateX(0)} }
+
+    /* Responsive */
+    @media (max-width: 1100px) { .kpi-row { grid-template-columns: repeat(3,1fr); } .grid-2 { grid-template-columns: 1fr; } .insight-grid { grid-template-columns: repeat(2,1fr); } .corr-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 900px)  { .layout { grid-template-columns: 1fr; } .dash-sidebar { display: none; } .kpi-row { grid-template-columns: repeat(2,1fr); } .grid-3 { grid-template-columns: 1fr; } .insight-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 500px)  { .body { padding: var(--space-md); } .kpi-row { grid-template-columns: repeat(2,1fr); } }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="dash-sidebar">
+    <div class="sb-logo">NEXUS</div>
+    <div class="sb-section-label">Main</div>
+    <a href="dashboard.html" class="sb-item"><span class="sb-icon">📊</span> Dashboard</a>
+    <a href="habits.html"    class="sb-item"><span class="sb-icon">✅</span> Habits</a>
+    <a href="focus.html"     class="sb-item"><span class="sb-icon">⏱</span> Focus Timer</a>
+    <a href="analytics.html" class="sb-item active"><span class="sb-icon">📈</span> Analytics</a>
+    <div class="sb-section-label">Track</div>
+    <a href="#" class="sb-item"><span class="sb-icon">🎯</span> Goals</a>
+    <a href="#" class="sb-item"><span class="sb-icon">😊</span> Mood</a>
+    <a href="#" class="sb-item"><span class="sb-icon">📓</span> Journal</a>
+    <a href="#" class="sb-item"><span class="sb-icon">💤</span> Sleep</a>
+    <div class="sb-section-label">Grow</div>
+    <a href="#" class="sb-item"><span class="sb-icon">🤖</span> AI Coach</a>
+    <a href="#" class="sb-item"><span class="sb-icon">🏆</span> Achievements</a>
+    <div class="sb-section-label">Account</div>
+    <a href="profile.html"  class="sb-item"><span class="sb-icon">👤</span> Profile</a>
+    <a href="settings.html" class="sb-item"><span class="sb-icon">⚙️</span> Settings</a>
+    <div class="sb-xp-card">
+      <div class="sb-xp-top"><span class="sb-level">⚡ Level 7</span><span class="sb-xp-num">2840 XP</span></div>
+      <div class="progress-bar"><div class="progress-bar-fill" style="width:81%"></div></div>
+      <div style="font-size:0.625rem;color:var(--text-muted);margin-top:4px">660 XP to Level 8</div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <header class="topbar">
+      <div style="display:flex;align-items:center;gap:var(--space-md)">
+        <a href="dashboard.html" style="color:var(--text-muted);font-size:1.25rem;text-decoration:none" onmouseover="this.style.color='var(--text-primary)'" onmouseout="this.style.color='var(--text-muted)'">←</a>
+        <span class="topbar-title">📈 Analytics</span>
+      </div>
+      <div class="topbar-right">
+        <div class="period-tabs" id="periodTabs">
+          <button class="period-tab" onclick="setPeriod(this,'7d')">7D</button>
+          <button class="period-tab active" onclick="setPeriod(this,'30d')">30D</button>
+          <button class="period-tab" onclick="setPeriod(this,'90d')">90D</button>
+          <button class="period-tab" onclick="setPeriod(this,'1y')">1Y</button>
+        </div>
+        <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle theme">🌙</button>
+        <button class="btn btn-glass btn-sm" onclick="showToast('Report exported! 📄','success')">↓ Export</button>
+      </div>
+    </header>
+
+    <div class="body">
+
+      <!-- KPI Row -->
+      <div class="kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-icon">⏱</div>
+          <div class="kpi-val" style="color:var(--accent-primary)">47h</div>
+          <div class="kpi-label">Focus this month</div>
+          <div class="kpi-delta up">↑ 18% vs last month</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon">🔥</div>
+          <div class="kpi-val" style="color:var(--accent-warning)">14</div>
+          <div class="kpi-label">Current streak</div>
+          <div class="kpi-delta up">↑ Personal best!</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon">✅</div>
+          <div class="kpi-val" style="color:var(--accent-success)">92%</div>
+          <div class="kpi-label">Habit completion</div>
+          <div class="kpi-delta up">↑ 6% vs last month</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon">😊</div>
+          <div class="kpi-val" style="color:var(--accent-secondary)">7.8</div>
+          <div class="kpi-label">Avg mood score</div>
+          <div class="kpi-delta up">↑ 0.4 vs last month</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon">⚡</div>
+          <div class="kpi-val" style="background:var(--grad-primary);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">4.2K</div>
+          <div class="kpi-label">XP this month</div>
+          <div class="kpi-delta up">↑ 22% vs last month</div>
+        </div>
+      </div>
+
+      <!-- Focus Hours Chart -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">⏱ Daily Focus Hours</span>
+          <div style="display:flex;gap:var(--space-md);font-size:0.75rem;color:var(--text-muted)">
+            <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:3px;background:var(--accent-primary);border-radius:2px;display:inline-block"></span>This month</span>
+            <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:3px;background:rgba(255,255,255,0.15);border-radius:2px;display:inline-block"></span>Last month</span>
+          </div>
+        </div>
+        <div class="chart-area">
+          <svg class="line-chart-svg" viewBox="0 0 700 160" preserveAspectRatio="none" style="height:160px">
+            <!-- Grid lines -->
+            <line x1="0" y1="40"  x2="700" y2="40"  stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+            <line x1="0" y1="80"  x2="700" y2="80"  stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+            <line x1="0" y1="120" x2="700" y2="120" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+            <!-- Y labels -->
+            <text x="0" y="38"  font-size="9" fill="rgba(255,255,255,0.25)">8h</text>
+            <text x="0" y="78"  font-size="9" fill="rgba(255,255,255,0.25)">5h</text>
+            <text x="0" y="118" font-size="9" fill="rgba(255,255,255,0.25)">2h</text>
+            <!-- Last month (grey) -->
+            <polyline points="20,110 45,95 70,105 95,88 120,98 145,82 170,92 195,78 220,90 245,75 270,85 295,70 320,80 345,68 370,78 395,65 420,74 445,62 470,72 495,58 520,68 545,55 570,65 595,52 620,62 645,50 670,60 695,48"
+              fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="2" stroke-linejoin="round"/>
+            <!-- This month (gradient fill) -->
+            <defs>
+              <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#00d4ff" stop-opacity="0.25"/>
+                <stop offset="100%" stop-color="#00d4ff" stop-opacity="0"/>
+              </linearGradient>
+              <linearGradient id="lineStroke" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="#00d4ff"/>
+                <stop offset="100%" stop-color="#7b61ff"/>
+              </linearGradient>
+            </defs>
+            <polygon points="20,160 20,100 45,85 70,95 95,72 120,82 145,60 170,72 195,55 220,68 245,52 270,62 295,45 320,58 345,42 370,55 395,38 420,50 445,35 470,48 495,32 520,44 545,28 570,40 595,25 620,38 645,22 670,35 695,20 695,160"
+              fill="url(#lineGrad)"/>
+            <polyline points="20,100 45,85 70,95 95,72 120,82 145,60 170,72 195,55 220,68 245,52 270,62 295,45 320,58 345,42 370,55 395,38 420,50 445,35 470,48 495,32 520,44 545,28 570,40 595,25 620,38 645,22 670,35 695,20"
+              fill="none" stroke="url(#lineStroke)" stroke-width="2.5" stroke-linejoin="round"/>
+            <!-- Today dot -->
+            <circle cx="695" cy="20" r="5" fill="#00d4ff" opacity="0.9"/>
+            <circle cx="695" cy="20" r="9" fill="rgba(0,212,255,0.2)"/>
+          </svg>
+          <!-- X labels -->
+          <div style="display:flex;justify-content:space-between;font-size:0.6rem;color:var(--text-muted);margin-top:4px;padding:0 4px">
+            <span>May 1</span><span>May 5</span><span>May 10</span><span>May 15</span><span>May 20</span><span>May 25</span><span>Today</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2-col: Focus bars + Mood line -->
+      <div class="grid-2">
+
+        <!-- Weekly focus bars -->
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">📅 Focus by Day of Week</span>
+            <span style="font-size:0.75rem;color:var(--text-muted)">30-day avg</span>
+          </div>
+          <div class="bar-chart-tall" id="dayOfWeekChart"></div>
+        </div>
+
+        <!-- Mood chart -->
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">😊 Mood Trend</span>
+            <span style="font-size:0.75rem;color:var(--text-muted)">Last 14 days</span>
+          </div>
+          <div class="chart-area">
+            <svg class="line-chart-svg" viewBox="0 0 400 120" preserveAspectRatio="none" style="height:120px">
+              <defs>
+                <linearGradient id="moodGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#7b61ff" stop-opacity="0.3"/>
+                  <stop offset="100%" stop-color="#7b61ff" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <line x1="0" y1="30" x2="400" y2="30" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+              <line x1="0" y1="60" x2="400" y2="60" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+              <line x1="0" y1="90" x2="400" y2="90" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+              <polygon points="0,120 0,72 29,60 57,50 86,65 114,45 143,55 171,38 200,48 229,35 257,42 286,28 314,38 343,22 371,32 400,18 400,120"
+                fill="url(#moodGrad)"/>
+              <polyline points="0,72 29,60 57,50 86,65 114,45 143,55 171,38 200,48 229,35 257,42 286,28 314,38 343,22 371,32 400,18"
+                fill="none" stroke="#7b61ff" stroke-width="2.5" stroke-linejoin="round"/>
+              <circle cx="400" cy="18" r="4" fill="#7b61ff"/>
+            </svg>
+            <div style="display:flex;justify-content:space-between;font-size:0.6rem;color:var(--text-muted);margin-top:4px">
+              <span>May 13</span><span>May 17</span><span>May 21</span><span>May 26</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:0.625rem;color:var(--text-muted);margin-top:var(--space-md)">
+              <span>Min: 5.2</span><span style="color:var(--accent-secondary);font-weight:700">Avg: 7.8 😊</span><span>Max: 9.1</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mood vs Productivity Scatter + Sleep vs Focus -->
+      <div class="corr-grid">
+
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">🔗 Mood × Productivity</span>
+            <span style="font-size:0.75rem;padding:3px 10px;background:rgba(0,229,160,0.1);color:var(--accent-success);border-radius:999px;font-weight:700">r = 0.82 ↑</span>
+          </div>
+          <div class="scatter-wrap">
+            <svg class="scatter-svg" viewBox="0 0 360 200">
+              <defs>
+                <radialGradient id="dotGrad"><stop offset="0%" stop-color="#00d4ff" stop-opacity="0.9"/><stop offset="100%" stop-color="#7b61ff" stop-opacity="0.6"/></radialGradient>
+              </defs>
+              <!-- Axes -->
+              <line x1="40" y1="10" x2="40" y2="175" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+              <line x1="40" y1="175" x2="350" y2="175" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+              <!-- Axis labels -->
+              <text x="185" y="195" font-size="9" fill="rgba(255,255,255,0.3)" text-anchor="middle">Mood Score →</text>
+              <text x="14" y="95" font-size="9" fill="rgba(255,255,255,0.3)" text-anchor="middle" transform="rotate(-90,14,95)">Focus hrs →</text>
+              <!-- Trend line -->
+              <line x1="50" y1="160" x2="340" y2="30" stroke="rgba(0,212,255,0.2)" stroke-width="1.5" stroke-dasharray="4,3"/>
+              <!-- Data points -->
+              <circle cx="80"  cy="145" r="5" fill="url(#dotGrad)" opacity="0.8"/>
+              <circle cx="100" cy="132" r="5" fill="url(#dotGrad)" opacity="0.8"/>
+              <circle cx="120" cy="120" r="6" fill="url(#dotGrad)" opacity="0.8"/>
+              <circle cx="145" cy="108" r="5" fill="url(#dotGrad)" opacity="0.8"/>
+              <circle cx="165" cy="115" r="5" fill="url(#dotGrad)" opacity="0.8"/>
+              <circle cx="185" cy="95"  r="6" fill="url(#dotGrad)" opacity="0.8"/>
+              <circle cx="205" cy="88"  r="5" fill="url(#dotGrad)" opacity="0.8"/>
+              <circle cx="225" cy="75"  r="7" fill="url(#dotGrad)" opacity="0.8"/>
+              <circle cx="250" cy="68"  r="5" fill="url(#dotGrad)" opacity="0.8"/>
+              <circle cx="270" cy="62"  r="6" fill="url(#dotGrad)" opacity="0.8"/>
+              <circle cx="290" cy="52"  r="5" fill="url(#dotGrad)" opacity="0.8"/>
+              <circle cx="310" cy="45"  r="7" fill="url(#dotGrad)" opacity="0.8"/>
+              <circle cx="330" cy="35"  r="5" fill="url(#dotGrad)" opacity="0.8"/>
+              <!-- X labels -->
+              <text x="80"  y="188" font-size="8" fill="rgba(255,255,255,0.25)" text-anchor="middle">3</text>
+              <text x="145" y="188" font-size="8" fill="rgba(255,255,255,0.25)" text-anchor="middle">5</text>
+              <text x="225" y="188" font-size="8" fill="rgba(255,255,255,0.25)" text-anchor="middle">7</text>
+              <text x="310" y="188" font-size="8" fill="rgba(255,255,255,0.25)" text-anchor="middle">9</text>
+            </svg>
+          </div>
+          <p style="font-size:0.8125rem;color:var(--text-muted);margin-top:var(--space-md);line-height:1.6">Strong positive correlation — on your best mood days you focus <strong style="color:var(--text-primary)">2.8× longer</strong> on average.</p>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">💤 Sleep × Focus Quality</span>
+            <span style="font-size:0.75rem;padding:3px 10px;background:rgba(0,212,255,0.1);color:var(--accent-primary);border-radius:999px;font-weight:700">r = 0.76 ↑</span>
+          </div>
+          <div class="scatter-wrap">
+            <svg class="scatter-svg" viewBox="0 0 360 200">
+              <defs>
+                <radialGradient id="dotGrad2"><stop offset="0%" stop-color="#00e5a0" stop-opacity="0.9"/><stop offset="100%" stop-color="#00d4ff" stop-opacity="0.6"/></radialGradient>
+              </defs>
+              <line x1="40" y1="10" x2="40" y2="175" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+              <line x1="40" y1="175" x2="350" y2="175" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+              <text x="185" y="195" font-size="9" fill="rgba(255,255,255,0.3)" text-anchor="middle">Sleep hours →</text>
+              <text x="14" y="95" font-size="9" fill="rgba(255,255,255,0.3)" text-anchor="middle" transform="rotate(-90,14,95)">Focus quality →</text>
+              <line x1="50" y1="165" x2="340" y2="25" stroke="rgba(0,229,160,0.2)" stroke-width="1.5" stroke-dasharray="4,3"/>
+              <circle cx="70"  cy="155" r="5" fill="url(#dotGrad2)" opacity="0.8"/>
+              <circle cx="100" cy="148" r="6" fill="url(#dotGrad2)" opacity="0.8"/>
+              <circle cx="130" cy="135" r="5" fill="url(#dotGrad2)" opacity="0.8"/>
+              <circle cx="155" cy="120" r="5" fill="url(#dotGrad2)" opacity="0.8"/>
+              <circle cx="180" cy="110" r="7" fill="url(#dotGrad2)" opacity="0.8"/>
+              <circle cx="205" cy="95"  r="5" fill="url(#dotGrad2)" opacity="0.8"/>
+              <circle cx="230" cy="80"  r="6" fill="url(#dotGrad2)" opacity="0.8"/>
+              <circle cx="255" cy="68"  r="5" fill="url(#dotGrad2)" opacity="0.8"/>
+              <circle cx="278" cy="55"  r="7" fill="url(#dotGrad2)" opacity="0.8"/>
+              <circle cx="305" cy="42"  r="5" fill="url(#dotGrad2)" opacity="0.8"/>
+              <circle cx="328" cy="30"  r="6" fill="url(#dotGrad2)" opacity="0.8"/>
+              <text x="70"  y="188" font-size="8" fill="rgba(255,255,255,0.25)" text-anchor="middle">4h</text>
+              <text x="155" y="188" font-size="8" fill="rgba(255,255,255,0.25)" text-anchor="middle">6h</text>
+              <text x="255" y="188" font-size="8" fill="rgba(255,255,255,0.25)" text-anchor="middle">8h</text>
+            </svg>
+          </div>
+          <p style="font-size:0.8125rem;color:var(--text-muted);margin-top:var(--space-md);line-height:1.6">Sleeping <strong style="color:var(--text-primary)">7.5+ hours</strong> is your sweet spot — your focus quality score jumps by <strong style="color:var(--accent-success)">41%</strong>.</p>
+        </div>
+      </div>
+
+      <!-- Subject Breakdown + Donut -->
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">📚 Study Subject Breakdown</span>
+            <span style="font-size:0.75rem;color:var(--text-muted)">This month · 47h total</span>
+          </div>
+          <div id="subjectBreakdown"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">🕐 Time Distribution</span>
+            <span style="font-size:0.75rem;color:var(--text-muted)">This month</span>
+          </div>
+          <div class="donut-wrap">
+            <svg class="donut-svg" width="160" height="160" viewBox="0 0 160 160">
+              <!-- Study -->
+              <circle cx="80" cy="80" r="60" fill="none" stroke="#00d4ff" stroke-width="22"
+                stroke-dasharray="226 151" stroke-dashoffset="0" transform="rotate(-90 80 80)" stroke-linecap="butt"/>
+              <!-- Work -->
+              <circle cx="80" cy="80" r="60" fill="none" stroke="#7b61ff" stroke-width="22"
+                stroke-dasharray="94 283" stroke-dashoffset="-226" transform="rotate(-90 80 80)" stroke-linecap="butt"/>
+              <!-- Health -->
+              <circle cx="80" cy="80" r="60" fill="none" stroke="#00e5a0" stroke-width="22"
+                stroke-dasharray="56 321" stroke-dashoffset="-320" transform="rotate(-90 80 80)" stroke-linecap="butt"/>
+              <!-- Other -->
+              <circle cx="80" cy="80" r="60" fill="none" stroke="#ffd93d" stroke-width="22"
+                stroke-dasharray="1 376" stroke-dashoffset="-376" transform="rotate(-90 80 80)" stroke-linecap="butt"/>
+              <!-- Center -->
+              <text x="80" y="74" text-anchor="middle" font-size="20" font-weight="800" fill="white" font-family="Syne,sans-serif">47h</text>
+              <text x="80" y="92" text-anchor="middle" font-size="9" fill="rgba(255,255,255,0.4)">this month</text>
+            </svg>
+            <div class="donut-legend">
+              <div class="donut-legend-item"><div class="donut-dot" style="background:#00d4ff"></div><span>Study — 24h (51%)</span></div>
+              <div class="donut-legend-item"><div class="donut-dot" style="background:#7b61ff"></div><span>Deep Work — 10h (21%)</span></div>
+              <div class="donut-legend-item"><div class="donut-dot" style="background:#00e5a0"></div><span>Health — 6h (13%)</span></div>
+              <div class="donut-legend-item"><div class="donut-dot" style="background:#ffd93d"></div><span>Other — 7h (15%)</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Activity Heatmap -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">📅 Activity Heatmap — 2025</span>
+          <span style="font-size:0.75rem;color:var(--text-muted)">Every dot is a day</span>
+        </div>
+        <div class="hm-months"><span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span></div>
+        <div class="hm-wrap"><div class="hm-inner" id="heatmapGrid"></div></div>
+        <div class="hm-legend">
+          <span style="font-size:0.625rem;color:var(--text-muted)">Less</span>
+          <div class="hm-legend-cell" style="background:var(--bg-glass-mid)"></div>
+          <div class="hm-legend-cell" style="background:rgba(0,212,255,0.18)"></div>
+          <div class="hm-legend-cell" style="background:rgba(0,212,255,0.42)"></div>
+          <div class="hm-legend-cell" style="background:rgba(0,212,255,0.68)"></div>
+          <div class="hm-legend-cell" style="background:rgba(0,212,255,0.92)"></div>
+          <span style="font-size:0.625rem;color:var(--text-muted)">More</span>
+        </div>
+      </div>
+
+      <!-- AI Insights -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">🤖 AI Insights</span>
+          <span style="font-size:0.75rem;color:var(--accent-primary);font-family:var(--font-mono)">Updated today</span>
+        </div>
+        <div class="insight-grid" id="insightGrid"></div>
+      </div>
+
+      <!-- Weekly Report -->
+      <div class="grid-2">
+        <div class="report-card">
+          <div class="report-week">WEEKLY REPORT · MAY 20–26, 2025</div>
+          <div class="report-score">87</div>
+          <div class="report-grade">Performance Score · Grade: A · Top 8% of users</div>
+          <div class="report-metrics">
+            <div class="report-metric"><div class="report-metric-label">Focus hours</div><div class="report-metric-val" style="color:var(--accent-primary)">32h 15m</div></div>
+            <div class="report-metric"><div class="report-metric-label">Habits done</div><div class="report-metric-val" style="color:var(--accent-success)">47 / 56</div></div>
+            <div class="report-metric"><div class="report-metric-label">Avg mood</div><div class="report-metric-val" style="color:var(--accent-secondary)">7.8 / 10</div></div>
+            <div class="report-metric"><div class="report-metric-label">XP earned</div><div class="report-metric-val" style="color:var(--accent-warning)">1,240 XP</div></div>
+            <div class="report-metric"><div class="report-metric-label">Best day</div><div class="report-metric-val">Thursday</div></div>
+            <div class="report-metric"><div class="report-metric-label">Hardest habit</div><div class="report-metric-val">Sleep 11 PM</div></div>
+          </div>
+          <button class="btn btn-primary btn-sm" style="margin-top:var(--space-xl);width:100%;justify-content:center" onclick="showToast('Full report emailed! 📧','success')">
+            Download Full Report →
+          </button>
+        </div>
+
+        <div class="panel" style="display:flex;flex-direction:column;gap:var(--space-lg)">
+          <div class="panel-header" style="margin-bottom:0">
+            <span class="panel-title">📆 Month-over-Month</span>
+          </div>
+          <div id="momChart"></div>
+          <div style="padding-top:var(--space-lg);border-top:1px solid var(--border-subtle)">
+            <div style="font-size:0.8125rem;font-weight:600;margin-bottom:var(--space-md)">Top 3 wins this month</div>
+            <div style="display:flex;flex-direction:column;gap:var(--space-sm)">
+              <div style="display:flex;align-items:center;gap:var(--space-md);padding:10px var(--space-md);background:var(--bg-glass);border-radius:var(--radius-md)">
+                <span style="font-size:1.25rem">🏆</span>
+                <div><div style="font-size:0.875rem;font-weight:600">14-day streak — personal best</div><div style="font-size:0.75rem;color:var(--text-muted)">Previous best: 10 days</div></div>
+              </div>
+              <div style="display:flex;align-items:center;gap:var(--space-md);padding:10px var(--space-md);background:var(--bg-glass);border-radius:var(--radius-md)">
+                <span style="font-size:1.25rem">⏱</span>
+                <div><div style="font-size:0.875rem;font-weight:600">8h focus in a single day</div><div style="font-size:0.75rem;color:var(--text-muted)">May 22 — your flow state day</div></div>
+              </div>
+              <div style="display:flex;align-items:center;gap:var(--space-md);padding:10px var(--space-md);background:var(--bg-glass);border-radius:var(--radius-md)">
+                <span style="font-size:1.25rem">😊</span>
+                <div><div style="font-size:0.875rem;font-weight:600">Highest mood week ever</div><div style="font-size:0.75rem;color:var(--text-muted)">Avg 8.4 — up from 6.9 last month</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /body -->
+  </div><!-- /main -->
+</div><!-- /layout -->
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+/* ── Theme ── */
+(function(){ try{ const t=localStorage.getItem('nexus-theme')||'dark'; document.documentElement.setAttribute('data-theme',t); document.addEventListener('DOMContentLoaded',()=>{ const b=document.getElementById('themeToggle'); if(b) b.textContent=t==='dark'?'🌙':'☀️'; }); }catch(e){} })();
+function toggleTheme(){ const c=document.documentElement.getAttribute('data-theme')||'dark'; const n=c==='dark'?'light':'dark'; document.documentElement.setAttribute('data-theme',n); document.getElementById('themeToggle').textContent=n==='dark'?'🌙':'☀️'; try{localStorage.setItem('nexus-theme',n);}catch(e){} }
+
+/* ── Toast ── */
+function showToast(msg,type){ const icons={info:'ℹ️',success:'✅',warning:'⚠️',xp:'⚡',error:'❌'}; const colors={info:'var(--accent-primary)',success:'var(--accent-success)',warning:'var(--accent-warning)',xp:'var(--accent-secondary)',error:'var(--accent-danger)'}; const c=document.getElementById('toastContainer'); const t=document.createElement('div'); t.className='toast'; t.style.borderLeft='3px solid '+(colors[type]||colors.info); t.innerHTML=`<span style="font-size:1.25rem">${icons[type]||'ℹ️'}</span><span style="font-size:0.9375rem;color:var(--text-primary)">${msg}</span>`; c.appendChild(t); setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity 0.3s'; setTimeout(()=>t.remove(),300); },3500); }
+
+/* ── Period tabs ── */
+function setPeriod(btn, period){
+  document.querySelectorAll('.period-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  showToast('Loading '+period+' data...','info');
+}
+
+/* ── Day of week chart ── */
+const dowData = [
+  { day:'Mon', hrs:5.2, color:'rgba(0,212,255,0.6)' },
+  { day:'Tue', hrs:6.8, color:'rgba(0,212,255,0.7)' },
+  { day:'Wed', hrs:4.5, color:'rgba(0,212,255,0.5)' },
+  { day:'Thu', hrs:7.8, color:'var(--accent-primary)' },
+  { day:'Fri', hrs:6.2, color:'rgba(0,212,255,0.65)' },
+  { day:'Sat', hrs:5.0, color:'rgba(0,212,255,0.55)' },
+  { day:'Sun', hrs:3.8, color:'rgba(0,212,255,0.4)' },
+];
+const maxDow = Math.max(...dowData.map(d=>d.hrs));
+document.getElementById('dayOfWeekChart').innerHTML = dowData.map(d=>`
+  <div class="bc-col">
+    <div class="bc-bar" style="height:${(d.hrs/maxDow)*140}px;background:${d.color}">
+      <div class="bc-bar-tip">${d.hrs}h avg</div>
+    </div>
+    <div class="bc-label">${d.day}</div>
+  </div>
+`).join('');
+
+/* ── Subject breakdown ── */
+const subjects = [
+  { icon:'⚛️', name:'Physics',   hours:14.5, color:'#00d4ff', pct:31 },
+  { icon:'🔢', name:'Maths',    hours:12.0, color:'#7b61ff', pct:26 },
+  { icon:'🧪', name:'Chemistry',hours:9.5,  color:'#00e5a0', pct:20 },
+  { icon:'📖', name:'Reading',  hours:6.0,  color:'#ffd93d', pct:13 },
+  { icon:'✍️', name:'Writing',  hours:5.0,  color:'#ff6b6b', pct:10 },
+];
+document.getElementById('subjectBreakdown').innerHTML = subjects.map(s=>`
+  <div class="subject-row">
+    <div class="subject-icon">${s.icon}</div>
+    <div class="subject-name">${s.name}</div>
+    <div class="subject-bar-wrap">
+      <div class="subject-bar">
+        <div class="subject-fill" style="width:${s.pct}%;background:${s.color}"></div>
+      </div>
+    </div>
+    <div class="subject-hours">${s.hours}h</div>
+    <div class="subject-pct">${s.pct}%</div>
+  </div>
+`).join('');
+
+/* ── Month-over-month bars ── */
+const months = [
+  { m:'Feb', score:62 }, { m:'Mar', score:71 }, { m:'Apr', score:78 }, { m:'May', score:87 },
+];
+const maxScore = 100;
+document.getElementById('momChart').innerHTML = `
+  <div style="display:flex;align-items:flex-end;gap:var(--space-md);height:100px">
+    ${months.map((m,i)=>`
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px">
+        <div style="font-family:var(--font-display);font-size:0.875rem;font-weight:800;color:${i===months.length-1?'var(--accent-primary)':'var(--text-muted)'}">${m.score}</div>
+        <div style="width:100%;height:${(m.score/maxScore)*70}px;background:${i===months.length-1?'var(--grad-primary)':'rgba(0,212,255,0.2)'};border-radius:6px 6px 0 0;transition:all 0.3s;cursor:pointer" onmouseover="this.style.filter='brightness(1.2)'" onmouseout="this.style.filter=''"></div>
+        <div style="font-size:0.6875rem;color:var(--text-muted)">${m.m}</div>
+      </div>
+    `).join('')}
+  </div>
+`;
+
+/* ── AI Insights ── */
+const insights = [
+  { tag:'🔥 Streak insight', color:'blue', text:'You\'ve maintained a <strong>14-day streak</strong> — statistically, users who hit 21 days have a <strong>94% chance</strong> of making it permanent.' },
+  { tag:'⚡ Peak performance', color:'purple', text:'Your best focus days are <strong>Tuesday and Thursday</strong>. Schedule your most important tasks on these days.' },
+  { tag:'😴 Sleep alert', color:'green', text:'On days with <strong>7.5+ hours sleep</strong>, your productivity score is 41% higher. You\'re currently averaging 6.8h.' },
+  { tag:'📱 Distraction pattern', color:'yellow', text:'You lose an avg of <strong>23 mins/day</strong> to phone. Your lowest-focus days correlate with high screen time before bed.' },
+  { tag:'🔮 Burnout risk: Low', color:'green', text:'Your recovery patterns are healthy. AI predicts <strong>no burnout risk</strong> in the next 14 days. Keep this pace.' },
+  { tag:'📈 Growth trajectory', color:'blue', text:'At your current rate, you\'ll reach <strong>Level 10</strong> in 47 days. Your discipline score is in the top <strong>12%</strong> of users.' },
+];
+document.getElementById('insightGrid').innerHTML = insights.map(i=>`
+  <div class="insight-card ${i.color}">
+    <div class="insight-tag" style="color:var(--accent-${i.color==='blue'?'primary':i.color==='purple'?'secondary':i.color==='green'?'success':i.color==='yellow'?'warning':'danger'})">${i.tag}</div>
+    <div class="insight-text">${i.text}</div>
+  </div>
+`).join('');
+
+/* ── Heatmap ── */
+(function(){
+  const grid=document.getElementById('heatmapGrid');
+  let html='';
+  for(let i=0;i<365;i++){ const r=Math.random(); const l=r<0.28?0:r<0.48?1:r<0.68?2:r<0.86?3:4; html+=`<div class="hm-cell" data-l="${l}" title="Level ${l}"></div>`; }
+  grid.innerHTML=html;
+})();
+</script>
+</body>
+</html>

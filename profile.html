@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profile — NEXUS</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    body { background: var(--bg-void); }
+    .layout { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+
+    /* Sidebar */
+    .dash-sidebar { background: var(--bg-panel); backdrop-filter: blur(40px); border-right: 1px solid var(--border-subtle); height: 100vh; position: sticky; top: 0; display: flex; flex-direction: column; padding: var(--space-lg) 0; overflow-y: auto; z-index: 200; }
+    .sb-logo { padding: 0 var(--space-lg) var(--space-xl); font-family: var(--font-display); font-size: 1.375rem; font-weight: 800; background: var(--grad-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .sb-section-label { font-size: 0.625rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); padding: 0 var(--space-lg); margin: var(--space-lg) 0 var(--space-sm); }
+    .sb-item { display: flex; align-items: center; gap: 10px; padding: 9px var(--space-lg); font-size: 0.875rem; font-weight: 500; color: var(--text-secondary); cursor: pointer; transition: all 0.2s; text-decoration: none; margin: 1px var(--space-sm); border-radius: var(--radius-md); position: relative; }
+    .sb-item:hover { background: var(--bg-glass); color: var(--text-primary); }
+    .sb-item.active { background: linear-gradient(90deg,rgba(0,212,255,0.1),rgba(123,97,255,0.05)); color: var(--accent-primary); border: 1px solid rgba(0,212,255,0.12); }
+    .sb-item.active::before { content:''; position:absolute; left:0; top:20%; bottom:20%; width:3px; background:var(--accent-primary); border-radius:0 999px 999px 0; }
+    .sb-icon { font-size: 1rem; width: 20px; text-align: center; flex-shrink: 0; }
+    .sb-xp-card { margin: var(--space-lg) var(--space-sm) 0; padding: var(--space-md); background: linear-gradient(135deg,rgba(0,212,255,0.08),rgba(123,97,255,0.08)); border: 1px solid rgba(0,212,255,0.12); border-radius: var(--radius-lg); }
+    .sb-xp-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-sm); }
+    .sb-level { font-family: var(--font-display); font-size: 0.75rem; font-weight: 800; color: var(--accent-primary); }
+    .sb-xp-num { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--text-muted); }
+
+    /* Main */
+    .main { display: flex; flex-direction: column; min-height: 100vh; }
+    .topbar { position: sticky; top: 0; z-index: 100; background: rgba(2,4,8,0.88); backdrop-filter: blur(40px); border-bottom: 1px solid var(--border-subtle); padding: 14px var(--space-xl); display: flex; align-items: center; justify-content: space-between; }
+    [data-theme="light"] .topbar { background: rgba(240,244,248,0.92); }
+    .topbar-right { display: flex; align-items: center; gap: var(--space-md); }
+
+    .body { padding: var(--space-xl); display: flex; flex-direction: column; gap: var(--space-xl); }
+
+    /* Panel */
+    .panel { background: var(--bg-glass); border: 1px solid var(--border-glass); border-radius: var(--radius-xl); padding: var(--space-xl); }
+    .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-xl); }
+    .panel-title { font-family: var(--font-display); font-size: 1rem; font-weight: 700; }
+
+    /* ── Hero Banner ── */
+    .profile-hero {
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      position: relative;
+      background: var(--bg-glass);
+      border: 1px solid var(--border-glass);
+    }
+
+    .profile-cover {
+      height: 180px;
+      background: linear-gradient(135deg, rgba(0,212,255,0.15) 0%, rgba(123,97,255,0.2) 50%, rgba(0,229,160,0.1) 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .profile-cover-grid {
+      position: absolute; inset: 0;
+      background-image: linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+      background-size: 32px 32px;
+    }
+
+    .cover-orb-1 { position: absolute; width: 300px; height: 300px; top: -100px; left: -50px; background: radial-gradient(circle, rgba(0,212,255,0.15), transparent 70%); border-radius: 50%; }
+    .cover-orb-2 { position: absolute; width: 250px; height: 250px; top: -80px; right: 0; background: radial-gradient(circle, rgba(123,97,255,0.18), transparent 70%); border-radius: 50%; }
+
+    .cover-edit-btn {
+      position: absolute; top: var(--space-md); right: var(--space-md);
+      padding: 6px 14px; background: rgba(0,0,0,0.4); backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.15); border-radius: 999px;
+      font-size: 0.75rem; font-weight: 600; color: rgba(255,255,255,0.8);
+      cursor: pointer; transition: all 0.2s;
+    }
+    .cover-edit-btn:hover { background: rgba(0,0,0,0.6); color: #fff; }
+
+    .profile-info-row {
+      padding: 0 var(--space-xl) var(--space-xl);
+      display: flex; align-items: flex-end; gap: var(--space-xl);
+      flex-wrap: wrap;
+    }
+
+    .profile-avatar-wrap {
+      margin-top: -56px; flex-shrink: 0;
+      position: relative;
+    }
+
+    .profile-avatar {
+      width: 112px; height: 112px; border-radius: 50%;
+      background: var(--grad-primary);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display); font-size: 2.5rem; font-weight: 900; color: #000;
+      border: 4px solid var(--bg-void);
+      box-shadow: 0 0 40px rgba(0,212,255,0.3);
+    }
+
+    .profile-level-badge {
+      position: absolute; bottom: 4px; right: 4px;
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--grad-primary); color: #000;
+      font-family: var(--font-display); font-size: 0.75rem; font-weight: 900;
+      display: flex; align-items: center; justify-content: center;
+      border: 2px solid var(--bg-void);
+    }
+
+    .profile-details { flex: 1; padding-top: var(--space-md); }
+    .profile-name { font-family: var(--font-display); font-size: 1.75rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 4px; }
+    .profile-handle { font-size: 0.9375rem; color: var(--text-muted); margin-bottom: var(--space-md); }
+    .profile-bio { font-size: 0.9375rem; color: var(--text-secondary); line-height: 1.6; max-width: 480px; }
+
+    .profile-tags { display: flex; gap: var(--space-sm); flex-wrap: wrap; margin-top: var(--space-md); }
+    .profile-tag { padding: 4px 12px; border-radius: 999px; font-size: 0.75rem; font-weight: 600; background: var(--bg-glass); border: 1px solid var(--border-glass); color: var(--text-secondary); }
+
+    .profile-actions { display: flex; gap: var(--space-sm); align-items: center; padding-top: var(--space-md); flex-shrink: 0; }
+
+    /* ── XP Level Card ── */
+    .xp-hero {
+      padding: var(--space-xl);
+      background: linear-gradient(135deg, rgba(0,212,255,0.06), rgba(123,97,255,0.06));
+      border: 1px solid rgba(0,212,255,0.14);
+      border-radius: var(--radius-xl);
+    }
+
+    .xp-top { display: flex; align-items: center; gap: var(--space-xl); flex-wrap: wrap; }
+
+    .xp-ring-wrap { position: relative; flex-shrink: 0; }
+    .xp-ring-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .xp-ring-level { font-family: var(--font-display); font-size: 1.75rem; font-weight: 900; background: var(--grad-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1; }
+    .xp-ring-title { font-size: 0.625rem; color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase; margin-top: 2px; }
+
+    .xp-details { flex: 1; }
+    .xp-rank { font-family: var(--font-display); font-size: 1.375rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 4px; }
+    .xp-sub { font-size: 0.875rem; color: var(--text-muted); margin-bottom: var(--space-lg); }
+    .xp-bar-label { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 6px; }
+
+    .xp-next-perks { display: flex; gap: var(--space-sm); margin-top: var(--space-lg); flex-wrap: wrap; }
+    .xp-perk { padding: 4px 12px; border-radius: 999px; font-size: 0.75rem; font-weight: 600; background: rgba(123,97,255,0.1); border: 1px solid rgba(123,97,255,0.2); color: var(--accent-secondary); }
+
+    /* ── Grid layouts ── */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-xl); }
+    .grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: var(--space-xl); }
+
+    /* ── Skills Tree ── */
+    .skill-tree { display: flex; flex-direction: column; gap: var(--space-lg); }
+    .skill-category { }
+    .skill-cat-label { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: var(--space-md); }
+    .skill-list { display: flex; flex-direction: column; gap: var(--space-sm); }
+    .skill-row { display: flex; align-items: center; gap: var(--space-md); }
+    .skill-icon { font-size: 1.25rem; width: 28px; text-align: center; flex-shrink: 0; }
+    .skill-name { font-size: 0.875rem; font-weight: 600; min-width: 110px; }
+    .skill-bar-wrap { flex: 1; }
+    .skill-bar { height: 6px; background: var(--bg-glass-mid); border-radius: 999px; overflow: hidden; }
+    .skill-fill { height: 100%; border-radius: 999px; transition: width 1.2s cubic-bezier(0.4,0,0.2,1); }
+    .skill-level { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--text-muted); min-width: 44px; text-align: right; }
+
+    /* ── Achievements ── */
+    .achievements-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--space-md); }
+
+    .achievement-card {
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      padding: var(--space-md) var(--space-sm);
+      background: var(--bg-glass); border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg); cursor: pointer;
+      transition: all 0.25s; text-align: center; position: relative;
+    }
+
+    .achievement-card:hover { border-color: var(--border-glass); transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+
+    .achievement-card.unlocked { border-color: rgba(255,217,61,0.25); background: rgba(255,217,61,0.04); }
+    .achievement-card.unlocked:hover { border-color: var(--accent-warning); box-shadow: 0 8px 24px rgba(255,217,61,0.15); }
+
+    .achievement-card.locked { opacity: 0.4; filter: grayscale(1); }
+
+    .ach-emoji { font-size: 2rem; line-height: 1; }
+    .ach-name { font-size: 0.6875rem; font-weight: 700; color: var(--text-primary); line-height: 1.3; }
+    .ach-desc { font-size: 0.625rem; color: var(--text-muted); line-height: 1.4; }
+    .ach-xp { font-family: var(--font-mono); font-size: 0.625rem; color: var(--accent-warning); background: rgba(255,217,61,0.1); padding: 2px 6px; border-radius: 999px; }
+    .ach-new { position: absolute; top: 6px; right: 6px; width: 8px; height: 8px; background: var(--accent-danger); border-radius: 50%; }
+
+    /* ── Stats grid ── */
+    .lifetime-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-md); }
+    .lifetime-card { padding: var(--space-lg); background: var(--bg-glass); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); text-align: center; transition: all 0.25s; }
+    .lifetime-card:hover { border-color: var(--border-glass); transform: translateY(-2px); }
+    .lifetime-val { font-family: var(--font-display); font-size: 1.75rem; font-weight: 800; letter-spacing: -0.04em; margin-bottom: 4px; }
+    .lifetime-label { font-size: 0.75rem; color: var(--text-muted); }
+
+    /* ── Activity feed ── */
+    .feed-item { display: flex; align-items: flex-start; gap: var(--space-md); padding: var(--space-md) 0; border-bottom: 1px solid var(--border-subtle); }
+    .feed-item:last-child { border-bottom: none; }
+    .feed-icon { width: 36px; height: 36px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
+    .feed-content { flex: 1; }
+    .feed-text { font-size: 0.875rem; color: var(--text-secondary); line-height: 1.5; }
+    .feed-text strong { color: var(--text-primary); }
+    .feed-time { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+    .feed-xp { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--accent-primary); background: rgba(0,212,255,0.08); padding: 2px 8px; border-radius: 999px; flex-shrink: 0; }
+
+    /* Edit modal */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(2,4,8,0.85); backdrop-filter: blur(8px); z-index: 5000; display: none; align-items: center; justify-content: center; padding: var(--space-lg); }
+    .modal-overlay.open { display: flex; animation: fadeIn 0.2s ease; }
+    .modal { background: var(--bg-deep); border: 1px solid var(--border-glass); border-radius: var(--radius-xl); padding: var(--space-2xl); max-width: 480px; width: 100%; animation: scaleIn 0.3s cubic-bezier(0.4,0,0.2,1); }
+    @keyframes scaleIn { from{opacity:0;transform:scale(0.93) translateY(12px)} to{opacity:1;transform:scale(1) translateY(0)} }
+    @keyframes fadeIn  { from{opacity:0} to{opacity:1} }
+    .modal-title { font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: var(--space-xl); }
+
+    /* Toast */
+    .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9000; display: flex; flex-direction: column; gap: 8px; }
+    .toast { background: rgba(8,16,28,0.97); backdrop-filter: blur(40px); border: 1px solid var(--border-glass); border-radius: var(--radius-lg); padding: 14px 18px; display: flex; align-items: center; gap: 12px; min-width: 280px; box-shadow: 0 24px 64px rgba(0,0,0,0.6); animation: sIn 0.3s ease; }
+    @keyframes sIn { from{opacity:0;transform:translateX(30px)} to{opacity:1;transform:translateX(0)} }
+
+    /* Responsive */
+    @media (max-width: 1100px) { .grid-2 { grid-template-columns: 1fr; } .achievements-grid { grid-template-columns: repeat(4,1fr); } }
+    @media (max-width: 900px)  { .layout { grid-template-columns: 1fr; } .dash-sidebar { display: none; } .grid-3 { grid-template-columns: repeat(2,1fr); } .lifetime-grid { grid-template-columns: repeat(2,1fr); } .achievements-grid { grid-template-columns: repeat(3,1fr); } }
+    @media (max-width: 500px)  { .body { padding: var(--space-md); } .achievements-grid { grid-template-columns: repeat(2,1fr); } .profile-name { font-size: 1.375rem; } .lifetime-grid { grid-template-columns: repeat(2,1fr); } }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="dash-sidebar">
+    <div class="sb-logo">NEXUS</div>
+    <div class="sb-section-label">Main</div>
+    <a href="dashboard.html" class="sb-item"><span class="sb-icon">📊</span> Dashboard</a>
+    <a href="habits.html"    class="sb-item"><span class="sb-icon">✅</span> Habits</a>
+    <a href="focus.html"     class="sb-item"><span class="sb-icon">⏱</span> Focus Timer</a>
+    <a href="analytics.html" class="sb-item"><span class="sb-icon">📈</span> Analytics</a>
+    <div class="sb-section-label">Track</div>
+    <a href="#" class="sb-item"><span class="sb-icon">🎯</span> Goals</a>
+    <a href="#" class="sb-item"><span class="sb-icon">😊</span> Mood</a>
+    <a href="#" class="sb-item"><span class="sb-icon">📓</span> Journal</a>
+    <a href="#" class="sb-item"><span class="sb-icon">💤</span> Sleep</a>
+    <div class="sb-section-label">Grow</div>
+    <a href="#" class="sb-item"><span class="sb-icon">🤖</span> AI Coach</a>
+    <a href="#" class="sb-item"><span class="sb-icon">🏆</span> Achievements</a>
+    <div class="sb-section-label">Account</div>
+    <a href="profile.html"  class="sb-item active"><span class="sb-icon">👤</span> Profile</a>
+    <a href="settings.html" class="sb-item"><span class="sb-icon">⚙️</span> Settings</a>
+    <div class="sb-xp-card">
+      <div class="sb-xp-top"><span class="sb-level">⚡ Level 7</span><span class="sb-xp-num">2840 XP</span></div>
+      <div class="progress-bar"><div class="progress-bar-fill" style="width:81%"></div></div>
+      <div style="font-size:0.625rem;color:var(--text-muted);margin-top:4px">660 XP to Level 8</div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <header class="topbar">
+      <div style="display:flex;align-items:center;gap:var(--space-md)">
+        <a href="dashboard.html" style="color:var(--text-muted);font-size:1.25rem;text-decoration:none" onmouseover="this.style.color='var(--text-primary)'" onmouseout="this.style.color='var(--text-muted)'">←</a>
+        <span style="font-family:var(--font-display);font-size:1.25rem;font-weight:800">👤 Profile</span>
+      </div>
+      <div class="topbar-right">
+        <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle theme">🌙</button>
+        <button class="btn btn-glass btn-sm" onclick="openEditModal()">✏️ Edit Profile</button>
+        <a href="settings.html" class="btn btn-primary btn-sm">⚙️ Settings</a>
+      </div>
+    </header>
+
+    <div class="body">
+
+      <!-- ── Profile Hero ── -->
+      <div class="profile-hero">
+        <div class="profile-cover">
+          <div class="profile-cover-grid"></div>
+          <div class="cover-orb-1"></div>
+          <div class="cover-orb-2"></div>
+          <button class="cover-edit-btn" onclick="showToast('Cover photo updated!','success')">📷 Change Cover</button>
+        </div>
+        <div class="profile-info-row">
+          <div class="profile-avatar-wrap">
+            <div class="profile-avatar" id="profileAvatar">AK</div>
+            <div class="profile-level-badge">7</div>
+          </div>
+          <div class="profile-details">
+            <div class="profile-name" id="profileName">Arjun Kumar</div>
+            <div class="profile-handle">@arjunkumar · JEE Aspirant · Mumbai, India</div>
+            <div class="profile-bio" id="profileBio">
+              Aspiring engineer. Building iron discipline one day at a time.
+              JEE 2026 target: IIT Bombay CSE 🎯 — 14-day streak and counting 🔥
+            </div>
+            <div class="profile-tags">
+              <span class="profile-tag">🎯 JEE 2026</span>
+              <span class="profile-tag">📚 Physics lover</span>
+              <span class="profile-tag">🏃 Runner</span>
+              <span class="profile-tag">📖 Avid reader</span>
+              <span class="profile-tag">🧘 Meditator</span>
+            </div>
+          </div>
+          <div class="profile-actions">
+            <button class="btn btn-glass btn-sm" onclick="showToast('Profile link copied! 🔗','success')">🔗 Share</button>
+            <button class="btn btn-glass btn-sm" onclick="showToast('QR code generated!','info')">📱 QR</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── XP Level Card ── -->
+      <div class="xp-hero">
+        <div class="xp-top">
+          <!-- XP Ring -->
+          <div class="xp-ring-wrap">
+            <svg width="120" height="120" viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="10"/>
+              <circle cx="60" cy="60" r="52" fill="none"
+                stroke="url(#xpGrad)" stroke-width="10" stroke-linecap="round"
+                stroke-dasharray="327" stroke-dashoffset="62"
+                transform="rotate(-90 60 60)"/>
+              <defs>
+                <linearGradient id="xpGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#00d4ff"/>
+                  <stop offset="100%" stop-color="#7b61ff"/>
+                </linearGradient>
+              </defs>
+            </svg>
+            <div class="xp-ring-center">
+              <div class="xp-ring-level">7</div>
+              <div class="xp-ring-title">Level</div>
+            </div>
+          </div>
+
+          <div class="xp-details">
+            <div class="xp-rank">⚡ Seeker — Rank #1,204</div>
+            <div class="xp-sub">Top 8% of all NEXUS users worldwide</div>
+            <div class="xp-bar-label">
+              <span>2,840 XP</span>
+              <span style="color:var(--accent-primary);font-weight:700">660 XP to Level 8</span>
+              <span>3,500 XP</span>
+            </div>
+            <div class="progress-bar" style="height:10px">
+              <div class="progress-bar-fill" style="width:81%"></div>
+            </div>
+            <div class="xp-next-perks">
+              <span style="font-size:0.75rem;color:var(--text-muted)">Level 8 unlocks:</span>
+              <span class="xp-perk">🎨 Custom themes</span>
+              <span class="xp-perk">🤖 AI mentor mode</span>
+              <span class="xp-perk">📊 Advanced analytics</span>
+            </div>
+          </div>
+
+          <!-- Quick stats -->
+          <div style="display:flex;flex-direction:column;gap:var(--space-md);flex-shrink:0">
+            <div style="text-align:center;padding:var(--space-md) var(--space-lg);background:rgba(255,167,38,0.08);border:1px solid rgba(255,167,38,0.15);border-radius:var(--radius-lg)">
+              <div style="font-size:2rem">🔥</div>
+              <div style="font-family:var(--font-display);font-size:1.5rem;font-weight:800;color:var(--accent-warning)">14</div>
+              <div style="font-size:0.6875rem;color:var(--text-muted)">Day Streak</div>
+            </div>
+            <div style="text-align:center;padding:var(--space-md) var(--space-lg);background:rgba(0,229,160,0.08);border:1px solid rgba(0,229,160,0.15);border-radius:var(--radius-lg)">
+              <div style="font-size:2rem">🏆</div>
+              <div style="font-family:var(--font-display);font-size:1.5rem;font-weight:800;color:var(--accent-success)">18</div>
+              <div style="font-size:0.6875rem;color:var(--text-muted)">Badges</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Lifetime Stats ── -->
+      <div class="panel">
+        <div class="panel-header"><span class="panel-title">📊 Lifetime Stats</span></div>
+        <div class="lifetime-grid" id="lifetimeGrid"></div>
+      </div>
+
+      <!-- ── Skill Tree + Activity Feed ── -->
+      <div class="grid-2">
+
+        <!-- Skill Tree -->
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">🌳 Skill Tree</span>
+            <span style="font-size:0.8125rem;color:var(--text-muted)">6 skills active</span>
+          </div>
+          <div class="skill-tree" id="skillTree"></div>
+        </div>
+
+        <!-- Activity Feed -->
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">⚡ Recent Activity</span>
+            <button style="font-size:0.8125rem;color:var(--accent-primary);background:none;border:none;cursor:pointer">View all</button>
+          </div>
+          <div id="activityFeed"></div>
+        </div>
+      </div>
+
+      <!-- ── Achievements ── -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">🏆 Achievements</span>
+          <span style="font-size:0.8125rem;color:var(--text-muted)">18 unlocked · 32 total</span>
+        </div>
+
+        <!-- Tabs -->
+        <div style="display:flex;gap:var(--space-sm);margin-bottom:var(--space-xl);flex-wrap:wrap">
+          <button class="btn btn-primary btn-sm" id="achTabAll" onclick="filterAch(this,'all')">All</button>
+          <button class="btn btn-ghost btn-sm" id="achTabFocus" onclick="filterAch(this,'focus')">⏱ Focus</button>
+          <button class="btn btn-ghost btn-sm" id="achTabHabit" onclick="filterAch(this,'habit')">✅ Habits</button>
+          <button class="btn btn-ghost btn-sm" id="achTabStreak" onclick="filterAch(this,'streak')">🔥 Streaks</button>
+          <button class="btn btn-ghost btn-sm" id="achTabRare" onclick="filterAch(this,'rare')">💎 Rare</button>
+        </div>
+
+        <div class="achievements-grid" id="achievementsGrid"></div>
+      </div>
+
+      <!-- Heatmap -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">📅 2025 Activity</span>
+          <span style="font-size:0.75rem;color:var(--text-muted)">147 active days</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:0.625rem;color:var(--text-muted);margin-bottom:4px">
+          <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span>
+        </div>
+        <div style="overflow-x:auto;padding-bottom:4px">
+          <div style="display:grid;grid-template-rows:repeat(7,1fr);grid-auto-flow:column;gap:3px;min-width:600px" id="profileHeatmap"></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;margin-top:8px;justify-content:flex-end">
+          <span style="font-size:0.625rem;color:var(--text-muted)">Less</span>
+          <div style="width:10px;height:10px;border-radius:2px;background:var(--bg-glass-mid)"></div>
+          <div style="width:10px;height:10px;border-radius:2px;background:rgba(0,212,255,0.18)"></div>
+          <div style="width:10px;height:10px;border-radius:2px;background:rgba(0,212,255,0.45)"></div>
+          <div style="width:10px;height:10px;border-radius:2px;background:rgba(0,212,255,0.72)"></div>
+          <div style="width:10px;height:10px;border-radius:2px;background:rgba(0,212,255,0.92)"></div>
+          <span style="font-size:0.625rem;color:var(--text-muted)">More</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div class="modal-overlay" id="editModal" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <div class="modal-title">✏️ Edit Profile</div>
+    <div style="display:flex;flex-direction:column;gap:var(--space-lg)">
+      <div style="display:flex;justify-content:center;margin-bottom:var(--space-md)">
+        <div style="width:80px;height:80px;border-radius:50%;background:var(--grad-primary);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:1.75rem;font-weight:900;color:#000;cursor:pointer;position:relative" onclick="showToast('Avatar upload coming soon!','info')">
+          AK
+          <div style="position:absolute;bottom:0;right:0;width:24px;height:24px;background:var(--bg-deep);border:2px solid var(--border-glass);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.75rem">📷</div>
+        </div>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Full name</label>
+        <input type="text" class="input-field" id="editName" value="Arjun Kumar" />
+      </div>
+      <div class="input-group">
+        <label class="input-label">Bio</label>
+        <textarea class="input-field" id="editBio" rows="3" style="resize:vertical">Aspiring engineer. Building iron discipline one day at a time. JEE 2026 target: IIT Bombay CSE 🎯</textarea>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Location</label>
+        <input type="text" class="input-field" id="editLocation" value="Mumbai, India" />
+      </div>
+      <div class="input-group">
+        <label class="input-label">User type</label>
+        <select class="input-field" id="editType">
+          <option selected>JEE Aspirant</option>
+          <option>NEET Aspirant</option>
+          <option>College Student</option>
+          <option>Working Professional</option>
+          <option>Entrepreneur</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:var(--space-md)">
+        <button class="btn btn-ghost" style="flex:1;justify-content:center" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" style="flex:2;justify-content:center" onclick="saveProfile()">Save Changes ✓</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+/* ── Theme ── */
+(function(){ try{ const t=localStorage.getItem('nexus-theme')||'dark'; document.documentElement.setAttribute('data-theme',t); document.addEventListener('DOMContentLoaded',()=>{ const b=document.getElementById('themeToggle'); if(b) b.textContent=t==='dark'?'🌙':'☀️'; }); }catch(e){} })();
+function toggleTheme(){ const c=document.documentElement.getAttribute('data-theme')||'dark'; const n=c==='dark'?'light':'dark'; document.documentElement.setAttribute('data-theme',n); document.getElementById('themeToggle').textContent=n==='dark'?'🌙':'☀️'; try{localStorage.setItem('nexus-theme',n);}catch(e){} }
+
+/* ── Toast ── */
+function showToast(msg,type){ const icons={info:'ℹ️',success:'✅',warning:'⚠️',xp:'⚡',error:'❌'}; const colors={info:'var(--accent-primary)',success:'var(--accent-success)',warning:'var(--accent-warning)',xp:'var(--accent-secondary)',error:'var(--accent-danger)'}; const c=document.getElementById('toastContainer'); const t=document.createElement('div'); t.className='toast'; t.style.borderLeft='3px solid '+(colors[type]||colors.info); t.innerHTML=`<span style="font-size:1.25rem">${icons[type]||'ℹ️'}</span><span style="font-size:0.9375rem;color:var(--text-primary)">${msg}</span>`; c.appendChild(t); setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity 0.3s'; setTimeout(()=>t.remove(),300); },3500); }
+
+/* ── Lifetime Stats ── */
+const lifetimeStats = [
+  { icon:'⏱', val:'312h', label:'Total focus time',       color:'var(--accent-primary)' },
+  { icon:'✅', val:'847',  label:'Habits completed',       color:'var(--accent-success)' },
+  { icon:'🔥', val:'14',   label:'Best streak (days)',     color:'var(--accent-warning)' },
+  { icon:'📓', val:'43',   label:'Journal entries',        color:'var(--accent-secondary)' },
+  { icon:'🍅', val:'248',  label:'Pomodoros done',         color:'#ff6b6b' },
+  { icon:'⚡', val:'2,840',label:'Total XP earned',        color:'var(--grad-primary)' },
+  { icon:'😊', val:'7.8',  label:'Avg mood score',         color:'var(--accent-secondary)' },
+  { icon:'💤', val:'7.1h', label:'Avg sleep',              color:'#7b61ff' },
+  { icon:'📅', val:'147',  label:'Active days this year',  color:'var(--accent-success)' },
+];
+document.getElementById('lifetimeGrid').innerHTML = lifetimeStats.map(s=>`
+  <div class="lifetime-card">
+    <div style="font-size:1.5rem;margin-bottom:6px">${s.icon}</div>
+    <div class="lifetime-val" style="background:${s.color.includes('grad')?s.color:'none'};-webkit-background-clip:${s.color.includes('grad')?'text':'unset'};-webkit-text-fill-color:${s.color.includes('grad')?'transparent':'unset'};background-clip:${s.color.includes('grad')?'text':'unset'};color:${s.color.includes('grad')?'transparent':s.color}">${s.val}</div>
+    <div class="lifetime-label">${s.label}</div>
+  </div>
+`).join('');
+
+/* ── Skill Tree ── */
+const skills = [
+  { cat:'🧠 Mind', items:[
+    { icon:'🎯', name:'Focus',       level:5, max:10, pct:72, color:'#00d4ff' },
+    { icon:'📚', name:'Learning',    level:6, max:10, pct:60, color:'#7b61ff' },
+    { icon:'🧘', name:'Mindfulness', level:4, max:10, pct:48, color:'#00e5a0' },
+  ]},
+  { cat:'💪 Body', items:[
+    { icon:'🏃', name:'Fitness',     level:5, max:10, pct:55, color:'#ff6b6b' },
+    { icon:'💤', name:'Sleep',       level:4, max:10, pct:42, color:'#7b61ff' },
+    { icon:'💧', name:'Hydration',   level:7, max:10, pct:80, color:'#00d4ff' },
+  ]},
+  { cat:'⚡ Discipline', items:[
+    { icon:'🔥', name:'Consistency', level:7, max:10, pct:81, color:'#ffd93d' },
+    { icon:'⏱', name:'Time Mgmt',   level:6, max:10, pct:65, color:'#00d4ff' },
+    { icon:'📓', name:'Reflection',  level:4, max:10, pct:44, color:'#00e5a0' },
+  ]},
+];
+document.getElementById('skillTree').innerHTML = skills.map(cat=>`
+  <div class="skill-category">
+    <div class="skill-cat-label">${cat.cat}</div>
+    <div class="skill-list">
+      ${cat.items.map(s=>`
+        <div class="skill-row">
+          <div class="skill-icon">${s.icon}</div>
+          <div class="skill-name">${s.name}</div>
+          <div class="skill-bar-wrap">
+            <div class="skill-bar">
+              <div class="skill-fill" style="width:${s.pct}%;background:${s.color}"></div>
+            </div>
+          </div>
+          <div class="skill-level" style="color:${s.color}">Lv.${s.level}</div>
+        </div>
+      `).join('')}
+    </div>
+  </div>
+`).join('');
+
+/* ── Activity Feed ── */
+const feedItems = [
+  { icon:'🔥', bg:'rgba(255,167,38,0.1)', text:'Hit a <strong>14-day streak</strong> — new personal best!', time:'2 hours ago', xp:'+100 XP' },
+  { icon:'⏱', bg:'rgba(0,212,255,0.1)',   text:'Completed a <strong>2h deep work</strong> session on Physics', time:'4 hours ago', xp:'+50 XP' },
+  { icon:'✅', bg:'rgba(0,229,160,0.1)',   text:'<strong>All 8 habits</strong> completed today 🎉', time:'6 hours ago', xp:'+80 XP' },
+  { icon:'📓', bg:'rgba(123,97,255,0.1)',  text:'Wrote a <strong>journal entry</strong> — 5 day journaling streak', time:'Yesterday', xp:'+20 XP' },
+  { icon:'🏆', bg:'rgba(255,217,61,0.1)', text:'Unlocked <strong>"Night Owl"</strong> achievement badge', time:'2 days ago', xp:'+150 XP' },
+  { icon:'📈', bg:'rgba(0,212,255,0.1)',   text:'Reached <strong>Level 7</strong> — Seeker rank achieved', time:'3 days ago', xp:'+200 XP' },
+];
+document.getElementById('activityFeed').innerHTML = feedItems.map(f=>`
+  <div class="feed-item">
+    <div class="feed-icon" style="background:${f.bg}">${f.icon}</div>
+    <div class="feed-content">
+      <div class="feed-text">${f.text}</div>
+      <div class="feed-time">${f.time}</div>
+    </div>
+    <div class="feed-xp">${f.xp}</div>
+  </div>
+`).join('');
+
+/* ── Achievements ── */
+const allAchievements = [
+  { emoji:'🔥', name:'On Fire',        desc:'7-day streak',       xp:50,  unlocked:true,  cat:'streak', isNew:false },
+  { emoji:'⚡', name:'First Session',  desc:'First focus block',  xp:25,  unlocked:true,  cat:'focus',  isNew:false },
+  { emoji:'✅', name:'Habit Hero',     desc:'10 habits done',     xp:40,  unlocked:true,  cat:'habit',  isNew:false },
+  { emoji:'🌅', name:'Early Bird',     desc:'5 AM wake up x5',    xp:60,  unlocked:true,  cat:'habit',  isNew:false },
+  { emoji:'🦉', name:'Night Owl',      desc:'Late study x7',      xp:40,  unlocked:true,  cat:'focus',  isNew:true  },
+  { emoji:'🧠', name:'Deep Thinker',   desc:'4h focus in a day',  xp:75,  unlocked:true,  cat:'focus',  isNew:false },
+  { emoji:'💪', name:'Iron Will',      desc:'21-day streak',      xp:150, unlocked:false, cat:'streak', isNew:false },
+  { emoji:'📚', name:'Bookworm',       desc:'Read 10 books',      xp:80,  unlocked:true,  cat:'habit',  isNew:false },
+  { emoji:'🧘', name:'Zen Master',     desc:'30 meditations',     xp:90,  unlocked:true,  cat:'habit',  isNew:false },
+  { emoji:'🏆', name:'Champion',       desc:'Top 10% score',      xp:200, unlocked:true,  cat:'rare',   isNew:true  },
+  { emoji:'💎', name:'Diamond Mind',   desc:'100-day streak',     xp:500, unlocked:false, cat:'rare',   isNew:false },
+  { emoji:'🌟', name:'Legendary',      desc:'Reach Level 10',     xp:1000,unlocked:false, cat:'rare',   isNew:false },
+  { emoji:'⏱', name:'Time Lord',      desc:'100h focus',         xp:200, unlocked:true,  cat:'focus',  isNew:false },
+  { emoji:'🌿', name:'Balance',        desc:'7-day mood avg 8+',  xp:100, unlocked:true,  cat:'habit',  isNew:false },
+  { emoji:'🚀', name:'Lift Off',       desc:'First 7-day plan',   xp:30,  unlocked:true,  cat:'habit',  isNew:false },
+  { emoji:'🔮', name:'Oracle',         desc:'30-day prediction',  xp:120, unlocked:false, cat:'rare',   isNew:false },
+];
+
+let activeAchCat = 'all';
+function filterAch(btn, cat){
+  document.querySelectorAll('[id^="achTab"]').forEach(b=>{ b.className='btn btn-ghost btn-sm'; });
+  btn.className='btn btn-primary btn-sm';
+  activeAchCat = cat;
+  renderAchievements();
+}
+
+function renderAchievements(){
+  const filtered = activeAchCat === 'all' ? allAchievements : allAchievements.filter(a=>a.cat===activeAchCat);
+  document.getElementById('achievementsGrid').innerHTML = filtered.map(a=>`
+    <div class="achievement-card ${a.unlocked?'unlocked':'locked'}"
+         onclick="${a.unlocked?`showToast('🏆 ${a.name}: ${a.desc}','xp')`:`showToast('Keep going to unlock this!','info')`}">
+      ${a.isNew?'<div class="ach-new"></div>':''}
+      <div class="ach-emoji">${a.emoji}</div>
+      <div class="ach-name">${a.name}</div>
+      <div class="ach-desc">${a.desc}</div>
+      <div class="ach-xp">${a.unlocked?a.xp+' XP':'🔒'}</div>
+    </div>
+  `).join('');
+}
+renderAchievements();
+
+/* ── Profile Heatmap ── */
+(function(){
+  const g=document.getElementById('profileHeatmap');
+  let h='';
+  for(let i=0;i<365;i++){ const r=Math.random(); const l=r<0.3?0:r<0.5?1:r<0.7?2:r<0.87?3:4; h+=`<div style="width:11px;height:11px;border-radius:2px;background:${['var(--bg-glass-mid)','rgba(0,212,255,0.18)','rgba(0,212,255,0.38)','rgba(0,212,255,0.62)','rgba(0,212,255,0.88)'][l]};cursor:pointer;transition:transform 0.15s" onmouseover="this.style.transform='scale(1.5)'" onmouseout="this.style.transform=''"></div>`; }
+  g.innerHTML=h;
+})();
+
+/* ── Edit Modal ── */
+function openEditModal(){ document.getElementById('editModal').classList.add('open'); }
+function closeModal(){ document.getElementById('editModal').classList.remove('open'); }
+function closeModalOutside(e){ if(e.target===document.getElementById('editModal')) closeModal(); }
+function saveProfile(){
+  const name = document.getElementById('editName').value.trim();
+  const bio  = document.getElementById('editBio').value.trim();
+  if(name){ document.getElementById('profileName').textContent=name; document.getElementById('profileAvatar').textContent=name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase(); try{localStorage.setItem('nexus_userName',JSON.stringify(name));}catch(e){} }
+  if(bio) document.getElementById('profileBio').textContent=bio;
+  closeModal();
+  showToast('Profile updated successfully! ✅','success');
+}
+
+/* ── Load saved name ── */
+(function(){
+  try{
+    const n = JSON.parse(localStorage.getItem('nexus_userName')||'"Arjun Kumar"');
+    if(n){ document.getElementById('profileName').textContent=n; document.getElementById('editName').value=n; document.getElementById('profileAvatar').textContent=n.split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase(); }
+  }catch(e){}
+})();
+</script>
+</body>
+</html>
